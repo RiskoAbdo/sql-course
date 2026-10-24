@@ -42,7 +42,7 @@ footer { color: var(--muted); font-size: 13px; margin-top: 32px; }
 <main>
   <p class="eyebrow">Occulenz · تدريب SQL Server</p>
   <h1>مسار <span class="key">SQL</span> للـ Data Analyst</h1>
-  <p class="lede">كل اسبوع بينزل كويز جديد. افتح كويز الاسبوع، حل التحديات، وابعت الملخص اللي في صفحة النتيجة.</p>
+  <p class="lede">مسابقة على 9 اسابيع: كل اسبوع بينزل كويز جديد. ادخل بالكود بتاعك، حل التحديات وسلم، ونتيجتك بتوصل للمدرب لوحدها. الترتيب بيتحسب من درجة اول محاولة في كل كويز.</p>
   <ul class="weeks" id="weeks"></ul>
   <footer>Abdullah Nabil · Occulenz</footer>
 </main>
@@ -50,7 +50,6 @@ footer { color: var(--muted); font-size: 13px; margin-top: 32px; }
 // Each week: raise RELEASED by 1 and upload that week's folder.
 const RELEASED = 1;
 const WEEKS = [
-  ['اختبار تحديد المستوى', 'شوية من كل حاجة: بيوريك تبدا منين', '15 تحدي · 60 دقيقة'],
   ['القراية من جدول', 'SELECT و ORDER BY و TOP', '11 تحدي · 45 دقيقة'],
   ['الفلترة والـ NULL', 'WHERE و LIKE و IS NULL', '12 تحدي · 45 دقيقة'],
   ['functions على الصف الواحد', 'النصوص والتواريخ و CASE', '15 تحدي · 60 دقيقة'],
@@ -59,13 +58,11 @@ const WEEKS = [
   ['الـ subqueries والـ CTEs', 'EXISTS و WITH و UNION', '12 تحدي · 60 دقيقة'],
   ['الـ window functions', 'ROW_NUMBER و LAG والـ running totals', '15 تحدي · 60 دقيقة'],
   ['تحليلات الـ business', 'النمو والـ retention والـ funnels', '12 تحدي · 90 دقيقة'],
-  ['المشروع الختامي', 'مراجعة المحل للادارة', '8 تحديات · 90 دقيقة'],
-  ['اختبار تحديد المستوى تاني', 'شوف اتحسنت قد ايه من اول يوم', '15 تحدي · 60 دقيقة']
+  ['المشروع الختامي', 'مراجعة المحل للادارة', '8 تحديات · 90 دقيقة']
 ];
 const pad = (n) => String(n).padStart(2, '0');
-// Week 11 is the placement test again, so it opens the week-01 page.
 document.getElementById('weeks').innerHTML = WEEKS.map(([title, sub, meta], k) => {
-  const n = k + 1, open = n <= RELEASED, href = n === 11 ? 'week-01/' : `week-${pad(n)}/`;
+  const n = k + 1, open = n <= RELEASED, href = `week-${pad(n)}/`;
   const inner = `<span class="no">${n}</span><span class="t"><b>اسبوع ${n} · ${title}</b><small>${sub} · ${meta}</small></span><span class="tag">${open ? 'ابدا' : 'قريب'}</span>`;
   return open ? `<li><a class="wk open" href="${href}">${inner}</a></li>` : `<li><div class="wk soon" aria-disabled="true">${inner}</div></li>`;
 }).join('');
