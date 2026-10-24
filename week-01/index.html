@@ -2026,7 +2026,8 @@ function compareResult(q, got, want) {
   return no('Some rows have different values from the expected result.', 'فيه صفوف قيمها مختلفة عن النتيجة المتوقعة.');
 }
 
-const STAGE1_QUESTIONS = [];
+const STARTER = '-- Write your query below. Run shows the result on the sample data.\n\n';
+const STAGE0_QUESTIONS = [];
 const STAGE2_QUESTIONS = [];
 const STAGE3_QUESTIONS = [];
 const STAGE4_QUESTIONS = [];
@@ -2035,563 +2036,400 @@ const STAGE6_QUESTIONS = [];
 const STAGE7_QUESTIONS = [];
 const STAGE8_QUESTIONS = [];
 const STAGE9_QUESTIONS = [];
-/* ---------- Stage 0 · Placement test ---------- */
-const STARTER = '-- Write your query below. Run shows the result on the sample data.\n\n';
-const STAGE0_QUESTIONS = [
+/* ---------- Stage 1 · Reading a table ---------- */
+const STAGE1_QUESTIONS = [
   {
-    id: 'cairo', title: 'Customers in Cairo', topic: 'SELECT, WHERE, ORDER BY', points: 3, tables: ['customers'], ordered: true,
-    prompt: `List the <code>full_name</code> and <code>signup_date</code> of every customer whose <code>city</code> is Cairo, oldest sign-up first.`,
-    hint: "Pick the two columns after SELECT, filter with WHERE city = 'Cairo', and sort with ORDER BY signup_date. Text goes in single quotes.",
+    id: 'pick', title: 'Pick the columns', topic: 'SELECT, FROM, ORDER BY', points: 5, tables: ['products'], ordered: true,
+    prompt: `Show the <code>product_name</code>, <code>category</code> and <code>unit_price</code> of every product, in that column order, sorted A to Z by <code>product_name</code>.`,
+    hint: 'List the columns after SELECT, separated by commas, in the order the task gives. Then ORDER BY product_name.',
     explain: {
-      given: 'The <code>customers</code> table. Each row is one customer, with the city they live in and the date they signed up.',
-      steps: ['Choose the two columns to show: the name and the sign-up date.', 'Keep only the rows where the city is exactly Cairo.', 'Sort the rows so the earliest sign-up date comes first.'],
-      example: 'In the sample data three customers live in Cairo: Mona (2023-02-14), Youssef (2023-09-21) and Salma (2024-03-28). That is already oldest first, so the result has those three rows in that order.',
-      watch: ['Only exactly Cairo counts. A customer in New Cairo lives in a different city.', 'Without ORDER BY, SQL Server can return rows in any order. If the task asks for an order, write it.', 'Text is written in single quotes: <code>\'Cairo\'</code>. Double quotes mean a column name in SQL Server.']
+      given: 'The <code>products</code> table: one row per product, with its name, category, list price and stock.',
+      steps: ['Name the three columns after SELECT, in the order asked.', 'Say which table they come from with FROM.', 'Sort the rows by product name, A to Z.'],
+      example: 'Sample data: the first row is 27 inch Monitor (digits come before letters), then Bluetooth Speaker, then Laptop Stand.',
+      watch: ['Column order is part of the result. category before product_name is a different result.', '<code>SELECT *</code> returns every column, including ones the task did not ask for.']
     },
-    solution: `SELECT full_name, signup_date
-FROM customers
-WHERE city = 'Cairo'
-ORDER BY signup_date;`,
+    solution: `SELECT product_name, category, unit_price
+FROM products
+ORDER BY product_name;`,
     walk: {
-      think: ['Start from the result: two columns, one row per Cairo customer.', 'WHERE removes the rows you do not want before anything is shown.', 'ASC (smallest first) is the default sort, and the smallest date is the oldest.'],
-      why: ['The two columns to show, in the order the task lists them.', 'The table that holds them.', "Keep only Cairo. Text goes in single quotes; SQL Server ignores capital letters here, so 'cairo' matches too.", 'Oldest date first. ASC is the default, so it is not written.']
+      think: ['A query starts from the result: which columns, from which table, in which order.', 'The SELECT list decides the columns and their order. ORDER BY decides the order of the rows.'],
+      why: ['The three columns, in the order the task lists them.', 'The table they live in.', 'A to Z by name. ASC (smallest first) is the default.']
+    },
+    ar: {
+      title: 'اختار الاعمدة', topic: 'SELECT و FROM و ORDER BY',
+      prompt: `اعرض <code>product_name</code> و <code>category</code> و <code>unit_price</code> لكل المنتجات، بنفس ترتيب الاعمدة ده، ومترتبين من A لـ Z على <code>product_name</code>.`,
+      hint: 'اكتب الاعمدة بعد SELECT وبينهم comma، بنفس الترتيب المطلوب. وبعدين ORDER BY product_name.',
+      explain: {
+        given: 'جدول <code>products</code>: صف لكل منتج، فيه اسمه والـ category والسعر والـ stock.',
+        steps: ['اكتب التلات اعمدة بعد SELECT بالترتيب المطلوب.', 'قول هتجيبهم منين بـ FROM.', 'رتب الصفوف على اسم المنتج من A لـ Z.'],
+        example: 'في الـ sample data اول صف هيبقى 27 inch Monitor (الارقام بتيجي قبل الحروف)، بعده Bluetooth Speaker، بعده Laptop Stand.',
+        watch: ['ترتيب الاعمدة جزء من النتيجة. لو category جت قبل product_name تبقى نتيجة تانية.', '<code>SELECT *</code> بترجع كل الاعمدة، ومنها اعمدة مش مطلوبة.']
+      },
+      walk: {
+        think: ['اي query بتبدا من النتيجة: انهي اعمدة، من انهي جدول، وبانهي ترتيب.', 'الـ SELECT هي اللي بتحدد الاعمدة وترتيبها. و ORDER BY هي اللي بتحدد ترتيب الصفوف.'],
+        why: ['التلات اعمدة بالترتيب اللي في المطلوب.', 'الجدول اللي فيه الاعمدة دي.', 'من A لـ Z على الاسم. ASC هي الـ default.']
+      }
     }
   },
   {
-    id: 'pricerange', title: 'Accessories in a price range', topic: 'AND, BETWEEN, sorting by two columns', points: 3, tables: ['products'], ordered: true,
-    prompt: `List the <code>product_name</code> and <code>unit_price</code> of products in the <b>Accessories</b> category that cost from 300 to 1500, both included. Show the most expensive first. Products with the same price are listed A to Z by name.`,
-    hint: 'Two conditions joined with AND: the category, and unit_price BETWEEN 300 AND 1500. Then ORDER BY unit_price DESC, product_name.',
+    id: 'rename', title: 'Report-ready column names', topic: 'AS, [bracketed names]', points: 8, tables: ['products'], ordered: true,
+    prompt: `Your manager wants this exact header for a report: <code>Product</code>, <code>Category</code>, <code>Price (EGP)</code>. Show every product's name, category and list price under those names, sorted by <code>Product</code> A to Z.`,
+    hint: 'Rename a column with AS. A name with a space or brackets inside goes in square brackets: unit_price AS [Price (EGP)].',
     explain: {
-      given: 'The <code>products</code> table, with each product\'s category and list price.',
-      steps: ['Keep only the Accessories category.', 'Also keep only prices from 300 up to 1500. Both conditions must be true, so join them with AND.', 'Sort by price from high to low.', 'When two products have the same price, sort those by name from A to Z.'],
-      example: 'Sample data: Mechanical Keyboard 1450, USB-C Hub 650, Laptop Stand 500, Wireless Mouse 350. The Webcam (100) is too cheap, and the Monitor and the Audio products are in other categories.',
-      watch: ['"From 300 to 1500, both included" means a product at exactly 300 or exactly 1500 is in. <code>BETWEEN</code> includes both ends.', 'The second sort column only matters when the first one is tied. Hidden data has products with the same price.']
+      given: 'The <code>products</code> table.',
+      steps: ['Select the three columns.', 'Give each one the name the report needs, with AS.', 'A name that has spaces or symbols goes inside [square brackets].', 'Sort by the product name.'],
+      example: '<code>unit_price AS [Price (EGP)]</code> shows the price column with the header <b>Price (EGP)</b>.',
+      watch: ['The header text must match the task: Price (EGP), with the space and the brackets.', 'ORDER BY can use the new name, because ORDER BY runs after SELECT.']
+    },
+    solution: `SELECT product_name AS Product,
+       category AS Category,
+       unit_price AS [Price (EGP)]
+FROM products
+ORDER BY Product;`,
+    walk: {
+      think: ['AS gives a column a new name in the result. The table itself does not change.', 'Square brackets let a name hold spaces and symbols.', 'SQL Server reads ORDER BY last, so the new name already exists there.'],
+      why: ['The name column, shown as Product.', 'The category column, shown as Category.', 'The price, under a name with a space and brackets, so it needs [ ].', 'From products.', 'ORDER BY can use the alias.']
+    },
+    ar: {
+      title: 'اسامي اعمدة جاهزة للتقرير', topic: 'AS و [اسامي بين اقواس]',
+      prompt: `المدير عايز الـ header ده بالظبط في التقرير: <code>Product</code> و <code>Category</code> و <code>Price (EGP)</code>. اعرض اسم كل منتج والـ category والسعر بالاسامي دي، ومترتبين على <code>Product</code> من A لـ Z.`,
+      hint: 'غير اسم العمود بـ AS. الاسم اللي فيه مسافة او اقواس بيتكتب بين [ ]: unit_price AS [Price (EGP)].',
+      explain: {
+        given: 'جدول <code>products</code>.',
+        steps: ['اختار التلات اعمدة.', 'ادي كل عمود الاسم اللي التقرير محتاجه بـ AS.', 'الاسم اللي فيه مسافات او رموز بيتكتب جوه [ ].', 'رتب على اسم المنتج.'],
+        example: '<code>unit_price AS [Price (EGP)]</code> بيعرض عمود السعر بـ header اسمه <b>Price (EGP)</b>.',
+        watch: ['الـ header لازم يبقى زي المطلوب بالظبط: Price (EGP) بالمسافة والاقواس.', 'ORDER BY ينفع تستخدم فيها الاسم الجديد، لانها بتشتغل بعد SELECT.']
+      },
+      walk: {
+        think: ['AS بتدي العمود اسم جديد في النتيجة بس، الجدول نفسه مش بيتغير.', 'الـ [ ] بتخلي الاسم ينفع يبقى فيه مسافات ورموز.', 'SQL Server بيقرا ORDER BY في الاخر، فالاسم الجديد بيبقى موجود ساعتها.'],
+        why: ['عمود الاسم، باسم Product.', 'عمود الـ category، باسم Category.', 'السعر باسم فيه مسافة واقواس، فلازم [ ].', 'من products.', 'ORDER BY بتستخدم الـ alias.']
+      }
+    }
+  },
+  {
+    id: 'stockvalue', title: 'Value of the stock', topic: 'Calculated columns', points: 8, tables: ['products'], ordered: true,
+    prompt: `For every product show <code>product_name</code>, <code>unit_price</code>, <code>stock</code>, and <code>stock_value</code> = stock × unit_price. Highest <code>stock_value</code> first; equal values A to Z by name.`,
+    hint: 'A calculation can be a column: stock * unit_price AS stock_value. Sort with ORDER BY stock_value DESC, product_name.',
+    explain: {
+      given: 'The <code>products</code> table. <code>stock</code> is how many units are in the warehouse.',
+      steps: ['Show the three existing columns.', 'Add a fourth column that multiplies stock by price, and name it stock_value.', 'Sort by that new column from high to low, then by name.'],
+      example: 'Sample data: Wireless Mouse has 120 units at 350, so its stock is worth 42000. The Webcam has 0 units, so it is worth 0.',
+      watch: ['A product with 0 stock is still listed, with a value of 0.', 'Without AS the new column shows as (No column name).']
+    },
+    solution: `SELECT product_name, unit_price, stock,
+       stock * unit_price AS stock_value
+FROM products
+ORDER BY stock_value DESC, product_name;`,
+    walk: {
+      think: ['SELECT can show a calculation, not only stored columns. It is worked out for each row.', 'Name it with AS so the report has a proper header.', 'Sort by the calculated value, and break ties by name.'],
+      why: ['The three stored columns.', 'The calculation for each row, named stock_value.', 'From products.', 'Most valuable stock first, ties by name.']
+    },
+    ar: {
+      title: 'قيمة الـ stock', topic: 'اعمدة محسوبة',
+      prompt: `لكل منتج اعرض <code>product_name</code> و <code>unit_price</code> و <code>stock</code>، و <code>stock_value</code> = الـ stock × السعر. الاعلى <code>stock_value</code> الاول، واللي قيمتهم واحدة من A لـ Z على الاسم.`,
+      hint: 'الحساب ينفع يبقى عمود: stock * unit_price AS stock_value. ورتب بـ ORDER BY stock_value DESC, product_name.',
+      explain: {
+        given: 'جدول <code>products</code>. <code>stock</code> هو عدد الوحدات اللي في المخزن.',
+        steps: ['اعرض التلات اعمدة الموجودين.', 'زود عمود رابع بيضرب الـ stock في السعر، وسميه stock_value.', 'رتب على العمود الجديد من الكبير للصغير، وبعدين على الاسم.'],
+        example: 'في الـ sample data: Wireless Mouse عنده 120 وحدة بـ 350، يبقى قيمته 42000. و Webcam عنده 0 وحدات، يبقى قيمته 0.',
+        watch: ['المنتج اللي الـ stock بتاعه 0 بيظهر برضه، وقيمته 0.', 'من غير AS العمود الجديد هيظهر (No column name).']
+      },
+      walk: {
+        think: ['SELECT ينفع تعرض فيها حساب، مش بس اعمدة متخزنة. الحساب بيتعمل لكل صف لوحده.', 'سميه بـ AS عشان التقرير يبقى له header مظبوط.', 'رتب على القيمة المحسوبة، وفك التعادل بالاسم.'],
+        why: ['التلات اعمدة المتخزنين.', 'الحساب لكل صف، باسم stock_value.', 'من products.', 'الاعلى قيمة الاول، والتعادل بالاسم.']
+      }
+    }
+  },
+  {
+    id: 'sortmix', title: 'Sorted by category, then price', topic: 'ORDER BY on two columns, mixed directions', points: 8, tables: ['products'], ordered: true,
+    prompt: `Show <code>category</code>, <code>product_name</code> and <code>unit_price</code>. Sort by <code>category</code> A to Z; inside each category the most expensive first; equal prices A to Z by name.`,
+    hint: 'Each column in ORDER BY has its own direction: ORDER BY category, unit_price DESC, product_name. DESC only affects the column right before it.',
+    explain: {
+      given: 'The <code>products</code> table.',
+      steps: ['Show the three columns in the order asked.', 'First sort key: category, A to Z.', 'Second key, used inside each category: price, high to low.', 'Third key, for equal prices: name, A to Z.'],
+      example: 'Sample data: Accessories comes first, and inside it Mechanical Keyboard (1450) comes before USB-C Hub (650). Then Audio, then Monitors.',
+      watch: ['<code>DESC</code> belongs to one column only. <code>ORDER BY category, unit_price DESC</code> sorts the category A to Z and the price high to low.', 'Hidden data has products with the same category and the same price.']
+    },
+    solution: `SELECT category, product_name, unit_price
+FROM products
+ORDER BY category, unit_price DESC, product_name;`,
+    walk: {
+      think: ['ORDER BY sorts by the first column; the second column only decides between rows that are equal in the first, and so on.', 'Every column gets its own ASC or DESC. Leaving it out means ASC.'],
+      why: ['The three columns, category first.', 'From products.', 'Category A to Z, then price high to low inside it, then name for equal prices.']
+    },
+    ar: {
+      title: 'مترتب على الـ category وبعدين السعر', topic: 'ORDER BY على عمودين باتجاهات مختلفة',
+      prompt: `اعرض <code>category</code> و <code>product_name</code> و <code>unit_price</code>. رتب على <code>category</code> من A لـ Z، وجوه كل category الاغلى الاول، واللي سعرهم واحد من A لـ Z على الاسم.`,
+      hint: 'كل عمود في ORDER BY له اتجاهه: ORDER BY category, unit_price DESC, product_name. الـ DESC بتاثر بس على العمود اللي قبلها على طول.',
+      explain: {
+        given: 'جدول <code>products</code>.',
+        steps: ['اعرض التلات اعمدة بالترتيب المطلوب.', 'اول ترتيب: الـ category من A لـ Z.', 'تاني ترتيب جوه كل category: السعر من الكبير للصغير.', 'تالت ترتيب للاسعار المتساوية: الاسم من A لـ Z.'],
+        example: 'في الـ sample data: Accessories الاول، وجواها Mechanical Keyboard (1450) قبل USB-C Hub (650). بعدها Audio، بعدها Monitors.',
+        watch: ['<code>DESC</code> بتاعة عمود واحد بس. <code>ORDER BY category, unit_price DESC</code> بترتب الـ category من A لـ Z والسعر من الكبير للصغير.', 'الـ hidden data فيها منتجات في نفس الـ category وبنفس السعر.']
+      },
+      walk: {
+        think: ['ORDER BY بترتب على اول عمود، والعمود التاني بيفرق بس بين الصفوف اللي متساوية في الاول، وهكذا.', 'كل عمود له ASC او DESC لوحده، ولو مكتبتش حاجة تبقى ASC.'],
+        why: ['التلات اعمدة، والـ category الاول.', 'من products.', 'الـ category من A لـ Z، وجواها السعر من الكبير للصغير، والاسم للاسعار المتساوية.']
+      }
+    }
+  },
+  {
+    id: 'distinctpairs', title: 'Each category and price once', topic: 'DISTINCT on more than one column', points: 8, tables: ['products'], ordered: true,
+    prompt: `The pricing team wants every different <code>category</code> + <code>unit_price</code> pair, each pair once. Sort by <code>category</code> A to Z, then by <code>unit_price</code> from lowest to highest.`,
+    hint: 'SELECT DISTINCT category, unit_price removes rows where both values repeat. DISTINCT always looks at the whole row.',
+    explain: {
+      given: 'The <code>products</code> table. Several products can share a category and a price.',
+      steps: ['Take the category and the price of every product.', 'Keep each pair only once.', 'Sort by category, then by price.'],
+      example: 'If two Accessories products both cost 650, the result has one row <code>Accessories | 650</code>. An Audio product at 650 is a different pair and gets its own row.',
+      watch: ['DISTINCT applies to all the columns in SELECT together, not to the first one only.', 'Adding product_name to SELECT would make every row unique again.']
+    },
+    solution: `SELECT DISTINCT category, unit_price
+FROM products
+ORDER BY category, unit_price;`,
+    walk: {
+      think: ['DISTINCT compares whole result rows: two rows are the same only if every selected column is the same.', 'So the columns you select decide what "the same" means.'],
+      why: ['Each different category + price pair once.', 'From products.', 'Category A to Z, then price low to high.']
+    },
+    ar: {
+      title: 'كل category وسعر مرة واحدة', topic: 'DISTINCT على اكتر من عمود',
+      prompt: `فريق التسعير عايز كل زوج مختلف من <code>category</code> + <code>unit_price</code>، كل زوج مرة واحدة. رتب على <code>category</code> من A لـ Z، وبعدين على <code>unit_price</code> من الاقل للاعلى.`,
+      hint: 'SELECT DISTINCT category, unit_price بتشيل الصفوف اللي القيمتين فيها متكررين. الـ DISTINCT دايما بتبص على الصف كله.',
+      explain: {
+        given: 'جدول <code>products</code>. ممكن كذا منتج يبقوا في نفس الـ category وبنفس السعر.',
+        steps: ['هات الـ category والسعر لكل منتج.', 'سيب كل زوج مرة واحدة بس.', 'رتب على الـ category، وبعدين على السعر.'],
+        example: 'لو منتجين Accessories سعرهم 650، النتيجة فيها صف واحد <code>Accessories | 650</code>. ومنتج Audio بـ 650 ده زوج تاني وليه صف لوحده.',
+        watch: ['الـ DISTINCT بتاخد كل الاعمدة اللي في SELECT مع بعض، مش اول عمود بس.', 'لو زودت product_name في SELECT كل صف هيرجع مختلف تاني.']
+      },
+      walk: {
+        think: ['الـ DISTINCT بتقارن صفوف النتيجة كلها: صفين يبقوا زي بعض لو كل الاعمدة اللي مختارها زي بعض.', 'يعني الاعمدة اللي بتختارها هي اللي بتحدد يعني ايه "زي بعض".'],
+        why: ['كل زوج category + سعر مختلف مرة واحدة.', 'من products.', 'الـ category من A لـ Z، وبعدين السعر من الاقل للاعلى.']
+      }
+    }
+  },
+  {
+    id: 'top5', title: 'The five biggest orders', topic: 'TOP with ORDER BY', points: 10, tables: ['orders'], ordered: true,
+    rule: { tag: 'Must use TOP', tagAr: 'لازم TOP', message: 'must use TOP', messageAr: 'لازم تستخدم TOP', ok: (c) => /\bTOP\b/i.test(c) },
+    prompt: `Show the <code>order_id</code>, <code>customer_id</code> and <code>quantity</code> of the 5 orders with the highest <code>quantity</code>, biggest first. For equal quantities the smaller <code>order_id</code> comes first. Use <code>TOP</code>.`,
+    hint: 'SELECT TOP (5) … ORDER BY quantity DESC, order_id. TOP keeps the first rows after ORDER BY has sorted them.',
+    explain: {
+      given: 'The <code>orders</code> table. One row per order, with how many units were ordered.',
+      steps: ['Sort the orders by quantity, biggest first.', 'Break ties with order_id, smallest first.', 'Keep only the first five rows.'],
+      example: 'Sample data: order 113 (12 units) and order 107 (10 units) are first and second, then 109 (4), then 105 (3), then 101 and 108 tie at 2: order 101 takes fifth place.',
+      watch: ['SQL Server applies TOP after ORDER BY, even though TOP is written first.', 'Without the tie-breaker, the fifth row can change from one run to the next.', 'customer_id can be NULL for a guest order. That is fine here.']
+    },
+    solution: `SELECT TOP (5) order_id, customer_id, quantity
+FROM orders
+ORDER BY quantity DESC, order_id;`,
+    walk: {
+      think: ['"The 5 biggest" means: sort by size, then keep five.', 'A tie at the cut-off needs a rule, so the result is always the same rows.'],
+      why: ['TOP (5) keeps five rows of the sorted result.', 'From orders.', 'Biggest quantity first; the smaller order id wins a tie.']
+    },
+    ar: {
+      title: 'اكبر 5 orders', topic: 'TOP مع ORDER BY',
+      prompt: `اعرض <code>order_id</code> و <code>customer_id</code> و <code>quantity</code> لاكبر 5 orders في الـ <code>quantity</code>، الاكبر الاول. ولو الـ quantity متساوية، الـ <code>order_id</code> الاصغر ييجي الاول. استخدم <code>TOP</code>.`,
+      hint: 'SELECT TOP (5) … ORDER BY quantity DESC, order_id. الـ TOP بتاخد اول صفوف بعد ما ORDER BY ترتبهم.',
+      explain: {
+        given: 'جدول <code>orders</code>. صف لكل order، وفيه عدد الوحدات اللي اتطلبت.',
+        steps: ['رتب الـ orders على الـ quantity من الكبير للصغير.', 'فك التعادل بالـ order_id من الصغير للكبير.', 'خد اول 5 صفوف بس.'],
+        example: 'في الـ sample data: order 113 (12 وحدة) وبعده 107 (10)، وبعدهم 109 (4)، وبعده 105 (3)، وبعدين 101 و 108 متعادلين بـ 2: الـ 101 ياخد المركز الخامس.',
+        watch: ['SQL Server بيطبق TOP بعد ORDER BY، مع ان TOP مكتوبة الاول.', 'من غير العمود اللي بيفك التعادل، الصف الخامس ممكن يتغير من مرة للتانية.', 'الـ customer_id ممكن يبقى NULL لو الـ order بتاع guest، وده عادي هنا.']
+      },
+      walk: {
+        think: ['"اكبر 5" يعني: رتب على الحجم وخد 5.', 'التعادل عند الحد محتاج قاعدة، عشان النتيجة تطلع نفس الصفوف كل مرة.'],
+        why: ['TOP (5) بتاخد 5 صفوف من النتيجة المترتبة.', 'من orders.', 'الاكبر quantity الاول، والـ order id الاصغر بيكسب التعادل.']
+      }
+    }
+  },
+  {
+    id: 'ties', level: 'Advanced', title: 'The most expensive, ties included', topic: 'TOP … WITH TIES', points: 12, tables: ['products'], ordered: false,
+    prompt: `Show the <code>product_name</code> and <code>unit_price</code> of the most expensive product. If several products share the highest price, show all of them. Any order is fine.`,
+    hint: 'TOP (1) WITH TIES … ORDER BY unit_price DESC keeps the first row and every row that ties with it on the ORDER BY columns.',
+    explain: {
+      given: 'The <code>products</code> table.',
+      steps: ['Sort the products by price, highest first.', 'Keep the first one.', 'Also keep every other product with exactly the same price.'],
+      example: 'Sample data: only the 27 inch Monitor costs 7800, so the result has one row. If a second product also cost 7800, both rows would appear.',
+      watch: ['<code>TOP (1)</code> alone keeps one row even when there is a tie, and drops the others. Hidden data has a tie at the top.', 'WITH TIES needs ORDER BY; it compares rows on the ORDER BY columns.', 'Another correct way: <code>WHERE unit_price = (SELECT MAX(unit_price) FROM products)</code>. Subqueries come in Stage 6.']
+    },
+    solution: `SELECT TOP (1) WITH TIES product_name, unit_price
+FROM products
+ORDER BY unit_price DESC;`,
+    walk: {
+      think: ['"The most expensive" can be more than one product when prices tie.', 'WITH TIES tells TOP to keep going while the next row equals the last kept row on the ORDER BY columns.'],
+      why: ['One row, plus every row that ties with it.', 'From products.', 'Highest price first; ties are judged on unit_price.']
+    },
+    ar: {
+      title: 'الاغلى، ومعاه اللي متعادل معاه', topic: 'TOP … WITH TIES',
+      prompt: `اعرض <code>product_name</code> و <code>unit_price</code> لاغلى منتج. ولو كذا منتج سعرهم هو اعلى سعر، اعرضهم كلهم. الترتيب مش مهم.`,
+      hint: 'TOP (1) WITH TIES … ORDER BY unit_price DESC بتاخد اول صف، ومعاه كل صف متعادل معاه في اعمدة الـ ORDER BY.',
+      explain: {
+        given: 'جدول <code>products</code>.',
+        steps: ['رتب المنتجات على السعر من الاعلى.', 'خد اول واحد.', 'وخد معاه كل منتج تاني سعره نفس السعر بالظبط.'],
+        example: 'في الـ sample data: 27 inch Monitor بس اللي بـ 7800، فالنتيجة صف واحد. لو فيه منتج تاني بـ 7800 كانوا هيظهروا الاتنين.',
+        watch: ['<code>TOP (1)</code> لوحدها بتاخد صف واحد حتى لو فيه تعادل، وبترمي الباقي. والـ hidden data فيها تعادل على اعلى سعر.', 'الـ WITH TIES محتاجة ORDER BY، لانها بتقارن الصفوف على اعمدة الـ ORDER BY.', 'فيه طريقة تانية صح: <code>WHERE unit_price = (SELECT MAX(unit_price) FROM products)</code>، والـ subqueries هتيجي في مرحلة 6.']
+      },
+      walk: {
+        think: ['"الاغلى" ممكن يبقى اكتر من منتج لو الاسعار متعادلة.', 'الـ WITH TIES بتقول للـ TOP كمل طول ما الصف اللي جاي زي اخر صف اخدته في اعمدة الـ ORDER BY.'],
+        why: ['صف واحد، ومعاه كل صف متعادل معاه.', 'من products.', 'الاعلى سعر الاول، والتعادل بيتحسب على unit_price.']
+      }
+    }
+  },
+  {
+    id: 'boxes', level: 'Advanced', title: 'Full boxes and loose items', topic: 'Whole-number division, %', points: 12, tables: ['products'], ordered: true,
+    prompt: `The warehouse packs products in boxes of 12. For every product show <code>product_name</code>, <code>stock</code>, <code>full_boxes</code> (how many full boxes of 12) and <code>loose_items</code> (what is left over). Sort by <code>product_name</code> A to Z.`,
+    hint: 'stock is a whole number, so stock / 12 in SQL Server is already whole-number division: 30 / 12 = 2. stock % 12 gives the remainder: 30 % 12 = 6.',
+    explain: {
+      given: 'The <code>products</code> table. <code>stock</code> is an INT (a whole number).',
+      steps: ['Show the name and the stock.', 'Work out how many full boxes of 12 the stock fills.', 'Work out how many items are left outside the boxes.', 'Sort by name.'],
+      example: 'Laptop Stand has 60 in stock: 60 / 12 = 5 full boxes and 60 % 12 = 0 left over. Mechanical Keyboard has 40: 3 full boxes and 4 left over.',
+      watch: ['In SQL Server an INT divided by an INT is an INT: <code>7 / 2</code> is 3, not 3.5. Here that is exactly what you want.', 'Dividing by <code>12.0</code> gives decimals such as 3.333333, which is not a number of full boxes.', 'A product with 0 stock has 0 boxes and 0 loose items.']
+    },
+    solution: `SELECT product_name, stock,
+       stock / 12 AS full_boxes,
+       stock % 12 AS loose_items
+FROM products
+ORDER BY product_name;`,
+    walk: {
+      think: ['The result type follows the inputs: INT / INT stays INT, and the fraction is dropped.', 'That is a trap when you want an average, and a tool when you want whole boxes.', '% (modulo) gives what is left after the whole-number division.'],
+      why: ['The name and the stock.', 'Whole boxes: INT / INT drops the fraction.', 'The remainder after taking out the full boxes.', 'From products.', 'A to Z by name.']
+    },
+    ar: {
+      title: 'كراتين كاملة وقطع فاضلة', topic: 'قسمة الارقام الصحيحة و %',
+      prompt: `المخزن بيعبي المنتجات في كراتين، كل كرتونة 12 قطعة. لكل منتج اعرض <code>product_name</code> و <code>stock</code> و <code>full_boxes</code> (عدد الكراتين الكاملة) و <code>loose_items</code> (القطع اللي فاضلة). رتب على <code>product_name</code> من A لـ Z.`,
+      hint: 'الـ stock رقم صحيح، فـ stock / 12 في SQL Server هي اصلا قسمة صحيحة: 30 / 12 = 2. و stock % 12 بتجيب الباقي: 30 % 12 = 6.',
+      explain: {
+        given: 'جدول <code>products</code>. الـ <code>stock</code> نوعه INT (رقم صحيح).',
+        steps: ['اعرض الاسم والـ stock.', 'احسب الـ stock بيملا كام كرتونة كاملة.', 'احسب كام قطعة فاضلة برا الكراتين.', 'رتب على الاسم.'],
+        example: 'Laptop Stand عنده 60: يعني 60 / 12 = 5 كراتين، و 60 % 12 = 0 فاضل. و Mechanical Keyboard عنده 40: يعني 3 كراتين و 4 قطع فاضلة.',
+        watch: ['في SQL Server الـ INT على INT نتيجته INT: <code>7 / 2</code> بـ 3 مش 3.5. وده بالظبط اللي انت عايزه هنا.', 'لو قسمت على <code>12.0</code> هيطلعلك كسور زي 3.333333، ودي مش عدد كراتين.', 'المنتج اللي الـ stock بتاعه 0 عنده 0 كراتين و 0 قطع.']
+      },
+      walk: {
+        think: ['نوع النتيجة بيمشي ورا نوع الارقام: INT / INT تفضل INT والكسر بيتشال.', 'ده فخ لو عايز متوسط، واداة لو عايز كراتين كاملة.', 'الـ % (modulo) بتجيب اللي فاضل بعد القسمة الصحيحة.'],
+        why: ['الاسم والـ stock.', 'الكراتين الكاملة: INT / INT بتشيل الكسر.', 'الباقي بعد الكراتين الكاملة.', 'من products.', 'من A لـ Z على الاسم.']
+      }
+    }
+  },
+  {
+    id: 'paging', level: 'Advanced', title: 'Page 2 of the catalogue', topic: 'OFFSET … FETCH', points: 14, tables: ['products'], ordered: true,
+    prompt: `The online catalogue lists products A to Z by <code>product_name</code>, 3 per page. Show page 2: the <code>product_name</code> and <code>unit_price</code> of the 4th, 5th and 6th products in that order.`,
+    hint: 'ORDER BY product_name OFFSET 3 ROWS FETCH NEXT 3 ROWS ONLY skips the first page and returns the next three rows.',
+    explain: {
+      given: 'The <code>products</code> table.',
+      steps: ['Sort all products A to Z by name.', 'Skip the first 3 rows (page 1).', 'Return the next 3 rows (page 2).'],
+      example: 'Sample data sorted by name: 27 inch Monitor, Bluetooth Speaker, Laptop Stand are page 1. Page 2 is Mechanical Keyboard, Noise-Cancelling Headphones, USB-C Hub.',
+      watch: ['OFFSET … FETCH must come right after ORDER BY. Without ORDER BY, SQL Server refuses it.', 'Page n starts after (n − 1) × page size rows, so page 2 skips 3.', 'If the last page has fewer rows, you simply get fewer rows.']
     },
     solution: `SELECT product_name, unit_price
 FROM products
-WHERE category = 'Accessories'
-  AND unit_price BETWEEN 300 AND 1500
-ORDER BY unit_price DESC, product_name;`,
+ORDER BY product_name
+OFFSET 3 ROWS FETCH NEXT 3 ROWS ONLY;`,
     walk: {
-      think: ['Two filters that must both be true, so AND.', 'BETWEEN low AND high is the same as >= low AND <= high.', 'ORDER BY can take several columns: the second one breaks ties in the first.'],
-      why: ['The two columns to show.', 'From the products table.', 'First condition: the category.', 'Second condition, joined with AND: the price range, both ends included.', 'Highest price first; equal prices then go A to Z by name.']
+      think: ['Paging is "sort, skip some rows, take some rows".', 'TOP can only take from the start. OFFSET can skip first, so it is the tool for page 2 and beyond.'],
+      why: ['The two columns the page shows.', 'From products.', 'The page order: A to Z by name.', 'Skip page 1 (3 rows), then return 3 rows.']
+    },
+    ar: {
+      title: 'صفحة 2 من الكتالوج', topic: 'OFFSET … FETCH',
+      prompt: `الكتالوج اونلاين بيعرض المنتجات من A لـ Z على <code>product_name</code>، 3 منتجات في كل صفحة. اعرض صفحة 2: الـ <code>product_name</code> و الـ <code>unit_price</code> للمنتج الرابع والخامس والسادس بالترتيب ده.`,
+      hint: 'ORDER BY product_name OFFSET 3 ROWS FETCH NEXT 3 ROWS ONLY بتعدي اول صفحة وترجع التلات صفوف اللي بعدها.',
+      explain: {
+        given: 'جدول <code>products</code>.',
+        steps: ['رتب كل المنتجات من A لـ Z على الاسم.', 'عدي اول 3 صفوف (صفحة 1).', 'رجع الـ 3 صفوف اللي بعدهم (صفحة 2).'],
+        example: 'الـ sample data مترتبة على الاسم: 27 inch Monitor و Bluetooth Speaker و Laptop Stand هما صفحة 1. وصفحة 2 هي Mechanical Keyboard و Noise-Cancelling Headphones و USB-C Hub.',
+        watch: ['OFFSET … FETCH لازم ييجوا بعد ORDER BY على طول. ومن غير ORDER BY الـ SQL Server بيرفضهم.', 'صفحة رقم n بتبدا بعد (n − 1) × حجم الصفحة، يعني صفحة 2 بتعدي 3.', 'لو اخر صفحة فيها صفوف اقل، هيرجعلك صفوف اقل وخلاص.']
+      },
+      walk: {
+        think: ['الـ paging معناه: رتب، عدي شوية صفوف، وخد شوية صفوف.', 'الـ TOP بتاخد من الاول بس. انما OFFSET بتعدي الاول، فهي الاداة لصفحة 2 وما بعدها.'],
+        why: ['العمودين اللي الصفحة بتعرضهم.', 'من products.', 'ترتيب الصفحات: من A لـ Z على الاسم.', 'عدي صفحة 1 (3 صفوف)، ورجع 3 صفوف.']
+      }
     }
   },
   {
-    id: 'top3', title: 'The three most expensive', topic: 'TOP', points: 3, tables: ['products'], ordered: true,
-    rule: { tag: 'Must use TOP', message: 'must use TOP', ok: (c) => /\bTOP\b/i.test(c) },
-    prompt: `Show the <code>product_name</code> and <code>unit_price</code> of the three most expensive products, most expensive first. If two products have the same price, the one that comes first A to Z wins. Use <code>TOP</code>.`,
-    hint: 'SELECT TOP (3) … then ORDER BY unit_price DESC, product_name. TOP keeps the first rows after sorting.',
+    id: 'fixvat', level: 'Advanced', title: 'Fix the VAT price list', topic: 'Debugging a SELECT', points: 15, tables: ['products'], ordered: true,
+    starter: `-- This query has 4 mistakes. Fix it so it does what the task says.
+SELECT TOP 5 product_name category,
+       unit_price * 14 / 100 AS price_with_vat
+FROM products
+ORDER BY unit_price;
+`,
+    prompt: `A colleague wrote the query in the editor. It should show the <code>product_name</code>, <code>category</code> and <code>price_with_vat</code> (the list price plus 14% VAT) of the 5 most expensive products, most expensive first, equal prices A to Z by name. It runs without an error, but it has 4 mistakes. Run it, compare with the expected result, and fix it.`,
+    hint: 'Look at the column headers in the result: there is one column too few, because a comma is missing. "Price plus 14%" is unit_price × 1.14. "Most expensive first" needs DESC, and equal prices need a second sort column.',
     explain: {
-      given: 'The <code>products</code> table.',
-      steps: ['Sort all products by price, highest first.', 'Break ties by name, A to Z.', 'Keep only the first three rows of that sorted list.'],
-      example: 'Sample data: 27 inch Monitor (7800) and Noise-Cancelling Headphones (3200) are first and second. Mechanical Keyboard and Bluetooth Speaker both cost 1450. Bluetooth comes first A to Z, so it takes third place.',
-      watch: ['TOP without ORDER BY gives three random rows. TOP is only meaningful with ORDER BY.', 'This is SQL Server, so it is <code>TOP</code>, not <code>LIMIT</code>.']
+      given: 'A query that runs but returns the wrong thing, and a description of what it should return.',
+      steps: ['Run it and read the headers. Only two columns come back: <b>category</b> and price_with_vat. A missing comma turned category into a new name for product_name.', 'unit_price * 14 / 100 is only the VAT, not the price with VAT. Multiply by 1.14 instead.', 'ORDER BY unit_price sorts cheapest first. The task wants the most expensive first.', 'Equal prices need product_name as a second sort column.'],
+      example: 'Sample data: the first row should be 27 inch Monitor | Monitors | 8892, because 7800 × 1.14 = 8892.',
+      watch: ['A query that runs is not a query that is right. Always compare the result with what was asked.', '<code>SELECT a b</code> means "column a, renamed b". This is the most common silent mistake in SQL.']
     },
-    solution: `SELECT TOP (3) product_name, unit_price
+    solution: `SELECT TOP (5) product_name, category,
+       unit_price * 1.14 AS price_with_vat
 FROM products
 ORDER BY unit_price DESC, product_name;`,
     walk: {
-      think: ['"The three most …" means: sort, then keep the first three.', 'In SQL Server, TOP goes right after SELECT, but it is applied last, after ORDER BY.', 'A tie at third place needs a rule, and the task gives it: the name, A to Z.'],
-      why: ['TOP (3) keeps three rows; the brackets are optional but recommended.', 'From the products table.', 'Most expensive first; the name breaks ties, so the third place is always the same product.']
-    }
-  },
-  {
-    id: 'cities', title: 'Cities we sell to', topic: 'DISTINCT, IS NOT NULL', points: 5, tables: ['customers'], ordered: true,
-    prompt: `List every city our customers live in, each city once, A to Z. Leave out customers with no city. Name the column <code>city</code>.`,
-    hint: 'SELECT DISTINCT city … WHERE city IS NOT NULL … ORDER BY city.',
-    explain: {
-      given: 'The <code>customers</code> table. Several customers can live in the same city, and some have no city recorded (NULL).',
-      steps: ['Take the city column.', 'Remove the rows where the city is missing.', 'Show each city only once.', 'Sort A to Z.'],
-      example: 'Sample data: Cairo appears three times and Alexandria twice, but each is listed once. Karim has no city, so there is no empty row. The result is Alexandria, Cairo, Giza, Mansoura.',
-      watch: ['DISTINCT treats NULL as a value, so without a filter you get an empty row at the top.', 'NULL is not a value you can compare with =. Use <code>IS NULL</code> or <code>IS NOT NULL</code>.']
+      think: ['Mistake 1: product_name category without a comma. SQL Server reads it as "product_name AS category", so the category column is missing.', 'Mistake 2: unit_price * 14 / 100 is the tax alone. The price with tax is unit_price × 1.14.', 'Mistake 3: ORDER BY unit_price puts the cheapest first. Add DESC.', 'Mistake 4: no tie-breaker, so equal prices can come in any order. Add product_name.'],
+      why: ['TOP (5), and the comma that makes category its own column.', 'The price plus 14%: × 1.14 is the price and the tax in one step.', 'From products.', 'Most expensive first, equal prices by name.']
     },
-    solution: `SELECT DISTINCT city
-FROM customers
-WHERE city IS NOT NULL
-ORDER BY city;`,
-    walk: {
-      think: ['"Each city once" is exactly what DISTINCT does to the rows it returns.', 'A missing city is NULL. NULL is never equal to anything, so it has its own test: IS NULL / IS NOT NULL.'],
-      why: ['DISTINCT removes repeated rows from the result.', 'From customers.', 'Leave out customers with no city.', 'A to Z.']
-    }
-  },
-  {
-    id: 'referee', title: 'Not referred by customer 2', topic: 'NULL in conditions', points: 5, tables: ['customers'], ordered: false,
-    prompt: `List the <code>full_name</code> of every customer who was <b>not</b> referred by customer 2. That includes customers who were not referred by anyone. Any order is fine.`,
-    hint: 'referred_by <> 2 is not true for NULL rows: comparing NULL with anything gives "unknown", and WHERE drops unknown rows. Add OR referred_by IS NULL.',
-    explain: {
-      given: 'The <code>customers</code> table. <code>referred_by</code> holds the id of the customer who referred them, or NULL if nobody did.',
-      steps: ['Keep customers referred by someone other than customer 2.', 'Also keep customers who were not referred at all (referred_by is NULL).', 'Show their names.'],
-      example: 'Sample data: Youssef and Omar were referred by customer 2, so they are left out. Mona, Ahmed and Salma were referred by nobody and are included, together with Mariam, Karim and Mahmoud. That is six names.',
-      watch: ['<code>NULL &lt;&gt; 2</code> is not true. It is unknown, and WHERE only keeps rows where the condition is true.', 'Never write <code>= NULL</code>. Use <code>IS NULL</code>.']
-    },
-    solution: `SELECT full_name
-FROM customers
-WHERE referred_by <> 2
-   OR referred_by IS NULL;`,
-    walk: {
-      think: ['SQL uses three values for a condition: true, false and unknown. Any comparison with NULL is unknown.', 'WHERE keeps only rows that are true, so NULL rows disappear from referred_by <> 2.', 'Add the NULL rows back on purpose with OR … IS NULL.'],
-      why: ['Only the name is asked for.', 'From customers.', 'Referred by someone other than customer 2.', 'Or not referred at all. Without this line, the customers nobody referred are lost.']
-    }
-  },
-  {
-    id: 'like', title: 'Gmail customers starting with M', topic: 'LIKE patterns', points: 5, tables: ['customers'], ordered: true,
-    prompt: `List the <code>full_name</code> and <code>email</code> of customers whose name starts with M and whose email ends with <code>@gmail.com</code>, sorted A to Z by name.`,
-    hint: "% means any number of characters. A name that starts with M is LIKE 'M%'. An email that ends with @gmail.com is LIKE '%@gmail.com'.",
-    explain: {
-      given: 'The <code>customers</code> table. Some emails are missing (NULL).',
-      steps: ['Keep names that start with the letter M.', 'Also keep only emails that end with exactly <code>@gmail.com</code>.', 'Show the name and email, sorted by name.'],
-      example: 'Sample data: Mona and Mahmoud have Gmail addresses. Mariam starts with M but uses Yahoo, so she is left out. The result is Mahmoud Ali, then Mona Hassan.',
-      watch: ['Where you put % matters. <code>\'%M%\'</code> finds an M anywhere, so "Ali Mansour" would match by mistake.', '<code>\'%gmail.com%\'</code> also matches look-alikes such as <code>@gmail.com.eg</code>. "Ends with" means nothing after it.', 'In this database, as in most SQL Server setups, LIKE ignores capital letters.']
-    },
-    solution: `SELECT full_name, email
-FROM customers
-WHERE full_name LIKE 'M%'
-  AND email LIKE '%@gmail.com'
-ORDER BY full_name;`,
-    walk: {
-      think: ['LIKE compares text with a pattern. % stands for "any characters, or none".', 'Starts with: the fixed part first, then %. Ends with: % first, then the fixed part.', 'Both rules must hold, so AND.'],
-      why: ['The two columns to show.', 'From customers.', 'An M, then anything.', 'Anything, then exactly @gmail.com at the end. A NULL email never matches, so it drops out.', 'A to Z by name.']
-    }
-  },
-  {
-    id: 'totals', title: 'Order totals after discount', topic: 'Calculated columns, ISNULL', points: 5, tables: ['orders'], ordered: true,
-    prompt: `For every order, show <code>order_id</code> and <code>order_total</code>: quantity × unit_price, minus the discount, rounded to 2 decimals. Sort by <code>order_id</code>. A NULL discount means no discount.`,
-    hint: 'quantity * unit_price * (1 - discount) works only when discount has a value. ISNULL(discount, 0) turns a missing discount into 0. Wrap everything in ROUND(…, 2) and name it AS order_total.',
-    explain: {
-      given: 'The <code>orders</code> table. <code>discount</code> is a fraction, so 0.10 means 10% off. NULL means there was no discount.',
-      steps: ['Multiply quantity by the price paid.', 'Take off the discount: multiply by (1 − discount).', 'Treat a missing discount as 0.', 'Round to 2 decimals and give the column the name order_total.'],
-      example: 'Order 102: 1 × 7800 × (1 − 0.10) = 7020. Order 101 has no discount: 2 × 350 × (1 − 0) = 700.',
-      watch: ['Any arithmetic with NULL gives NULL. Without ISNULL, every order without a discount gets a NULL total.', 'Use the unit_price in <code>orders</code>, the price actually paid.']
-    },
-    solution: `SELECT order_id,
-       ROUND(quantity * unit_price * (1 - ISNULL(discount, 0)), 2) AS order_total
-FROM orders
-ORDER BY order_id;`,
-    walk: {
-      think: ['Write the maths first: quantity × price × (1 − discount).', 'Then ask what happens when a value is NULL. Here NULL means "no discount", which is 0.', 'Give a calculated column a name with AS, otherwise it shows as (No column name).'],
-      why: ['The order id comes first.', 'ISNULL(discount, 0) swaps NULL for 0, then the maths, rounded to 2 decimals and named order_total.', 'From orders.', 'Sorted by order id.']
-    }
-  },
-  {
-    id: 'size', title: 'Order size labels', topic: 'CASE WHEN', points: 5, tables: ['orders'], ordered: true,
-    prompt: `For every order, show <code>order_id</code>, <code>quantity</code> and a column <code>order_size</code>: <code>Bulk</code> for 10 or more items, <code>Medium</code> for 3 to 9, and <code>Small</code> for 1 or 2. Sort by <code>order_id</code>.`,
-    hint: "CASE WHEN quantity >= 10 THEN 'Bulk' WHEN quantity >= 3 THEN 'Medium' ELSE 'Small' END AS order_size. CASE stops at the first true WHEN.",
-    explain: {
-      given: 'The <code>orders</code> table and its <code>quantity</code> column.',
-      steps: ['Show the order id and the quantity.', 'Add a third column that turns the quantity into a word.', '10 or more is Bulk, 3 to 9 is Medium, anything less is Small.', 'Sort by order id.'],
-      example: 'Order 107 has 10 items, so it is Bulk. Order 105 has 3, so it is Medium. Order 101 has 2, so it is Small.',
-      watch: ['The edges matter: exactly 10 is Bulk and exactly 3 is Medium.', 'Write the labels exactly as given, with a capital first letter.', 'CASE checks the WHENs from top to bottom and stops at the first true one, so start with the biggest band.']
-    },
-    solution: `SELECT order_id, quantity,
-       CASE
-           WHEN quantity >= 10 THEN 'Bulk'
-           WHEN quantity >= 3 THEN 'Medium'
-           ELSE 'Small'
-       END AS order_size
-FROM orders
-ORDER BY order_id;`,
-    walk: {
-      think: ['CASE is SQL\'s if / else. It gives back one value per row.', 'Check the biggest band first. When a WHEN is true, the rest are skipped, so each WHEN only needs its lower edge.', 'ELSE catches everything that is left.'],
-      why: ['Two plain columns, then the CASE.', 'Start of the CASE expression.', '10 or more.', 'Not 10 or more, but 3 or more: 3 to 9.', 'Everything else: 1 or 2.', 'END closes the CASE; AS names the new column.', 'From orders.', 'Sorted by order id.']
-    }
-  },
-  {
-    id: 'status', title: 'Orders per status', topic: 'GROUP BY, COUNT(*) vs COUNT(column)', points: 8, tables: ['orders'], ordered: true,
-    prompt: `For each <code>status</code>, show how many orders have it (<code>orders</code>) and how many of those have a discount value recorded (<code>discounted_orders</code>, meaning discount is not NULL). Sort by <code>orders</code> from most to fewest, then by <code>status</code> A to Z.`,
-    hint: 'GROUP BY status gives one row per status. COUNT(*) counts rows; COUNT(discount) counts only the rows where discount is not NULL.',
-    explain: {
-      given: 'The <code>orders</code> table. Each order has a status such as Delivered or Cancelled, and a discount that may be NULL.',
-      steps: ['Make one group per status.', 'In each group, count all the orders.', 'In each group, also count the orders that have a discount value.', 'Sort by the first count, high to low, and break ties by status name.'],
-      example: 'Sample data: 10 orders are Delivered and 4 of them have a discount. Cancelled has 2 orders, 1 with a discount. Pending and Shipped have 1 order each with no discount; tied at 1, Pending comes first A to Z.',
-      watch: ['<code>COUNT(*)</code> counts rows. <code>COUNT(column)</code> skips NULLs in that column. That difference is the whole point here.', 'Every column in SELECT that is not inside COUNT, SUM and so on must be in GROUP BY.']
-    },
-    solution: `SELECT status,
-       COUNT(*) AS orders,
-       COUNT(discount) AS discounted_orders
-FROM orders
-GROUP BY status
-ORDER BY orders DESC, status;`,
-    walk: {
-      think: ['"For each status" means GROUP BY status: one result row per status.', 'Aggregates such as COUNT work on each group separately.', 'COUNT(*) counts rows, COUNT(discount) counts non-NULL discounts, so one query gives both numbers.'],
-      why: ['The group\'s status.', 'All rows in the group.', 'Only rows where discount is not NULL.', 'From orders.', 'One group per status.', 'Busiest status first; ORDER BY can use the SELECT alias, because ORDER BY runs after SELECT.']
-    }
-  },
-  {
-    id: 'category', title: 'Net revenue by category', topic: 'JOIN, SUM, GROUP BY', points: 8, tables: ['orders', 'products'], ordered: true,
-    prompt: `For each product <code>category</code>, show the net revenue from <b>Delivered</b> orders as <code>net_revenue</code>: quantity × the price paid × (1 − discount), with a NULL discount counting as 0, added up and rounded to 2 decimals. Highest revenue first.`,
-    hint: 'JOIN orders to products ON product_id to get the category. Filter status = \'Delivered\' in WHERE, GROUP BY category, and SUM the order totals. Use o.unit_price, the price paid, not p.unit_price.',
-    explain: {
-      given: '<code>orders</code> has the quantities, prices paid and discounts. <code>products</code> has the category. They share <code>product_id</code>.',
-      steps: ['Join each order to its product to find the category.', 'Keep only Delivered orders.', 'Work out each order\'s net value, as in "Order totals after discount".', 'Add the values up per category and round.', 'Sort from the highest revenue down.'],
-      example: 'Sample data, Audio: order 103 is 3200 and order 110 is 3200 × 0.90 = 2880, so Audio is 6080. Order 108 is Shipped, not Delivered, so it does not count.',
-      watch: ['Both tables have a <code>unit_price</code>. Writing it without a table alias gives "Ambiguous column name". The price paid is <code>o.unit_price</code>; <code>p.unit_price</code> is today\'s list price.', 'Filter the rows with WHERE before grouping.']
-    },
-    solution: `SELECT p.category,
-       ROUND(SUM(o.quantity * o.unit_price * (1 - ISNULL(o.discount, 0))), 2) AS net_revenue
-FROM orders AS o
-JOIN products AS p ON p.product_id = o.product_id
-WHERE o.status = 'Delivered'
-GROUP BY p.category
-ORDER BY net_revenue DESC;`,
-    walk: {
-      think: ['The category lives in products and the money lives in orders, so join them on the shared product_id.', 'SQL Server reads FROM/JOIN first, then WHERE, then GROUP BY, then SELECT. So WHERE removes non-delivered orders before the sums are made.', 'Short table aliases (o, p) say which table each column comes from.'],
-      why: ['The category from products.', 'The order value for each row, summed per category, rounded and named.', 'Orders, with the alias o.', 'Match each order to its product.', 'Only Delivered orders count.', 'One row per category.', 'Highest revenue first.']
-    }
-  },
-  {
-    id: 'loyal', level: 'Advanced', title: 'Loyal customers', topic: 'JOIN, WHERE vs HAVING', points: 10, tables: ['customers', 'orders'], ordered: true,
-    prompt: `Show the <code>full_name</code> of every customer with <b>at least 3 Delivered orders</b>, and that number as <code>delivered_orders</code>. Most orders first, then name A to Z. Two different customers can have the same name, so count each customer separately.`,
-    hint: "Join customers to orders, keep o.status = 'Delivered' in WHERE, GROUP BY c.customer_id, c.full_name, and keep the groups with HAVING COUNT(*) >= 3.",
-    explain: {
-      given: '<code>customers</code> and <code>orders</code>, linked by <code>customer_id</code>.',
-      steps: ['Join each order to its customer.', 'Keep only Delivered orders. This is a filter on rows.', 'Count the delivered orders per customer.', 'Keep only customers whose count is 3 or more. This is a filter on groups.', 'Sort by the count, high to low, then by name.'],
-      example: 'Sample data: Mona has 4 orders, but one is Pending, so she has 3 Delivered orders and qualifies. Youssef has 2 Delivered orders (his third is Shipped), so he does not.',
-      watch: ['WHERE filters rows before grouping; HAVING filters groups after counting. A condition on COUNT(*) belongs in HAVING.', '"At least 3" includes exactly 3, so use <code>&gt;= 3</code>.', 'Group by the customer id, not just the name. Two customers named the same would otherwise be counted as one.']
-    },
-    solution: `SELECT c.full_name, COUNT(*) AS delivered_orders
-FROM customers AS c
-JOIN orders AS o ON o.customer_id = c.customer_id
-WHERE o.status = 'Delivered'
-GROUP BY c.customer_id, c.full_name
-HAVING COUNT(*) >= 3
-ORDER BY delivered_orders DESC, c.full_name;`,
-    walk: {
-      think: ['Two filters of different kinds: "Delivered" is about each order row, "at least 3" is about each customer\'s total.', 'Row filters go in WHERE (before grouping). Group filters go in HAVING (after counting).', 'Group by the id, the thing that really identifies a customer. The name is added so it can be shown.'],
-      why: ['The customer\'s name and the count of their delivered orders.', 'Customers, alias c.', 'Each customer joined to their orders.', 'Row filter: only delivered orders reach the count.', 'One group per customer.', 'Group filter: keep customers with 3 or more.', 'Most orders first, ties by name.']
-    }
-  },
-  {
-    id: 'fix', level: 'Advanced', title: 'Fix the city report', topic: 'Debugging: query order of operations', points: 10, tables: ['orders', 'customers'], ordered: true,
-    starter: `-- This query has 4 mistakes. Fix it so it does what the task says.
-SELECT c.city, o.status, COUNT(*) AS delivered_orders
-FROM orders AS o
-JOIN customers AS c ON c.customer_id = o.customer_id
-WHERE delivered_orders >= 2
-GROUP BY c.city
-ORDER BY delivered_orders DESC;
-`,
-    prompt: `A colleague wrote the query in the editor. It should show, for each customer <code>city</code>, the number of <b>Delivered</b> orders as <code>delivered_orders</code>, only for cities with 2 or more, sorted by <code>delivered_orders</code> from most to fewest and then by city A to Z. It has 4 mistakes. Run it, read the errors, and fix it.`,
-    hint: 'SQL Server reads FROM, WHERE, GROUP BY, HAVING, then SELECT, then ORDER BY. So WHERE cannot see the alias delivered_orders and cannot hold COUNT(*): that check goes in HAVING. o.status is not grouped. The Delivered filter is missing, and so is the tie-breaker.',
-    explain: {
-      given: 'A query that does not run, and a description of what it should return.',
-      steps: ['Run it and read the error messages. They point at two of the mistakes.', 'Columns in SELECT must be grouped or inside an aggregate. The task does not ask for the status, so remove it.', 'A condition on a count is a filter on groups. Move it from WHERE to HAVING, and repeat COUNT(*) there instead of the alias.', 'The task only counts Delivered orders. That row filter belongs in WHERE.', 'The task sorts by city when the counts tie.'],
-      example: 'Sample data: Cairo has 7 delivered orders (Mona 3, Youssef 2, Salma 2) and Alexandria has 2. Giza has only 1, so it is left out.',
-      watch: ['The order in which SQL Server reads a query is: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY. An alias made in SELECT exists only for ORDER BY.', 'The error messages are the real SQL Server messages, so learning to read them pays off at work.']
-    },
-    solution: `SELECT c.city, COUNT(*) AS delivered_orders
-FROM orders AS o
-JOIN customers AS c ON c.customer_id = o.customer_id
-WHERE o.status = 'Delivered'
-GROUP BY c.city
-HAVING COUNT(*) >= 2
-ORDER BY delivered_orders DESC, c.city;`,
-    walk: {
-      think: ['Mistake 1: o.status is in SELECT but not grouped. The task does not want it, so it goes.', 'Mistake 2: WHERE delivered_orders >= 2. WHERE runs before SELECT (no alias yet) and before grouping (no count yet). It becomes HAVING COUNT(*) >= 2.', 'Mistake 3: nothing limits the count to Delivered orders. That is a row filter, so it goes in WHERE.', 'Mistake 4: the tie-breaker c.city is missing from ORDER BY.'],
-      why: ['The city and the count; status removed.', 'Orders, alias o.', 'Each order joined to its customer.', 'Row filter: Delivered only.', 'One row per city.', 'Group filter: 2 or more. HAVING repeats COUNT(*) because the alias does not exist yet.', 'ORDER BY runs last, so here the alias works; city breaks ties.']
-    }
-  },
-  {
-    id: 'noorders', level: 'Advanced', title: 'Customers who never ordered', topic: 'LEFT JOIN, NOT IN and NULL', points: 10, tables: ['customers', 'orders'], ordered: true,
-    prompt: `List the <code>full_name</code> of every customer who has never placed an order of any status, sorted A to Z. Remember that guest checkouts are stored in <code>orders</code> with a NULL <code>customer_id</code>.`,
-    hint: 'LEFT JOIN orders to customers and keep the rows where the order side is NULL (WHERE o.order_id IS NULL). Or use NOT EXISTS. Be careful with NOT IN when the list can contain NULL.',
-    explain: {
-      given: '<code>customers</code> and <code>orders</code>, linked by <code>customer_id</code>. Guest orders have no customer, so their customer_id is NULL.',
-      steps: ['Match every customer with their orders, keeping customers who have none.', 'A customer with no orders gets NULLs on the order side.', 'Keep exactly those customers.', 'Sort by name.'],
-      example: 'Sample data: Omar and Karim have no orders, so the result is Karim Mostafa, then Omar Khaled.',
-      watch: ['<code>NOT IN (SELECT customer_id FROM orders)</code> returns nothing at all if that list contains a single NULL: "x is not in (1, 2, NULL)" is unknown, never true. Hidden data has guest orders.', 'An INNER JOIN drops customers without orders, which are the very rows you need. Use LEFT JOIN.']
-    },
-    solution: `SELECT c.full_name
-FROM customers AS c
-LEFT JOIN orders AS o ON o.customer_id = c.customer_id
-WHERE o.order_id IS NULL
-ORDER BY c.full_name;`,
-    walk: {
-      think: ['"Customers with no match in orders" is the classic LEFT JOIN … IS NULL pattern (an anti-join).', 'LEFT JOIN keeps every customer. Where no order matches, the order columns come back NULL.', 'Test a column that is never NULL in a real order, such as order_id.', 'NOT EXISTS also works. NOT IN breaks as soon as the subquery returns a NULL.'],
-      why: ['The name only.', 'All customers.', 'Their orders, if any; no match gives NULLs.', 'Keep customers with no matching order.', 'A to Z.']
-    }
-  },
-  {
-    id: 'monthly', level: 'Advanced', title: 'Monthly sales in 2024', topic: 'Dates, GROUP BY an expression', points: 10, tables: ['orders'], ordered: true,
-    prompt: `For each month of <b>2024</b>, show the month number as <code>order_month</code>, the number of <b>Delivered</b> orders as <code>orders</code>, and their net revenue as <code>net_revenue</code> (quantity × unit_price × (1 − discount), NULL discount = 0, rounded to 2 decimals). Only months with sales appear. Sort by month.`,
-    hint: "WHERE status = 'Delivered' AND YEAR(order_date) = 2024, then GROUP BY MONTH(order_date). SELECT MONTH(order_date) AS order_month, COUNT(*), and the rounded SUM.",
-    explain: {
-      given: 'The <code>orders</code> table. <code>order_date</code> is a date.',
-      steps: ['Keep only Delivered orders from 2024.', 'Group the orders by the month of their date.', 'For each month, count the orders and add up their net value.', 'Sort by month number.'],
-      example: 'Sample data, January 2024: order 101 (700) and order 102 (7020), so 2 orders and 7720.00. February has only order 103, because 104 was Cancelled.',
-      watch: ['Orders on 31 December 2023 or 1 January 2025 must not count. <code>YEAR(order_date) = 2024</code> handles both edges.', 'GROUP BY can group by an expression such as <code>MONTH(order_date)</code>. You cannot GROUP BY the alias order_month.']
-    },
-    solution: `SELECT MONTH(order_date) AS order_month,
-       COUNT(*) AS orders,
-       ROUND(SUM(quantity * unit_price * (1 - ISNULL(discount, 0))), 2) AS net_revenue
-FROM orders
-WHERE status = 'Delivered'
-  AND YEAR(order_date) = 2024
-GROUP BY MONTH(order_date)
-ORDER BY order_month;`,
-    walk: {
-      think: ['The groups are months, so group by MONTH(order_date).', 'Filter the year first in WHERE, otherwise January 2024 and January 2025 would fall into the same group.', 'GROUP BY runs before SELECT, so it repeats MONTH(order_date) instead of using the alias. ORDER BY runs after SELECT, so the alias works there.'],
-      why: ['The month number, named.', 'How many delivered orders in that month.', 'Their net value, summed and rounded.', 'From orders.', 'Delivered only.', 'And only 2024.', 'One group per month, by the expression.', 'January first.']
-    }
-  },
-  {
-    id: 'units', level: 'Advanced', title: 'Units sold, zeros included', topic: 'LEFT JOIN conditions in ON', points: 10, tables: ['products', 'orders'], ordered: true,
-    prompt: `For <b>every</b> product, show <code>product_name</code> and <code>units_2025</code>: the total quantity in <b>Delivered</b> orders dated in <b>2025</b>. Products with no such orders show <b>0</b>. Sort by <code>units_2025</code> from most to fewest, then by name A to Z.`,
-    hint: "LEFT JOIN orders with the status and year conditions inside ON, not in WHERE. Then ISNULL(SUM(o.quantity), 0) turns the empty sums into 0.",
-    explain: {
-      given: '<code>products</code> and <code>orders</code>, linked by <code>product_id</code>.',
-      steps: ['Start from all products, so none can go missing.', 'Attach only the orders that are Delivered and from 2025.', 'Add up the quantities per product.', 'Show 0 where a product had nothing attached.', 'Sort by units, then by name.'],
-      example: 'Sample data: Wireless Mouse sold 12 units (order 113) and USB-C Hub 2 (order 112). Laptop Stand\'s 2025 order was Cancelled, so it shows 0, like every other product.',
-      watch: ['With a LEFT JOIN, a condition on the right table in WHERE throws away the products with no match, because their order columns are NULL. It turns the LEFT JOIN back into an INNER JOIN. Put those conditions in ON.', 'SUM over no rows is NULL, not 0. Wrap it in ISNULL(…, 0).', 'Add up the quantity with SUM. COUNT would count orders, not units.']
-    },
-    solution: `SELECT p.product_name,
-       ISNULL(SUM(o.quantity), 0) AS units_2025
-FROM products AS p
-LEFT JOIN orders AS o
-       ON o.product_id = p.product_id
-      AND o.status = 'Delivered'
-      AND YEAR(o.order_date) = 2025
-GROUP BY p.product_id, p.product_name
-ORDER BY units_2025 DESC, p.product_name;`,
-    walk: {
-      think: ['"Every product, zeros included" means the products table drives the query, with a LEFT JOIN.', 'ON decides which orders attach to each product. WHERE runs after the join and removes whole rows. A product with no attached order has NULL order columns, so a WHERE test on them removes it.', 'So the status and year conditions go in ON, and the empty sums become 0 with ISNULL.'],
-      why: ['The product name.', 'Total units; ISNULL turns "no orders" (NULL) into 0.', 'Every product, alias p.', 'Attach orders…', '…of this product…', '…that were delivered…', '…in 2025. Products with no match stay, with NULLs.', 'One group per product.', 'Most units first, ties by name.']
+    ar: {
+      title: 'صلح قايمة الاسعار بالـ VAT', topic: 'Debugging لـ SELECT',
+      prompt: `زميلك كتب الـ query اللي في الـ editor. المفروض تعرض <code>product_name</code> و <code>category</code> و <code>price_with_vat</code> (السعر + 14% VAT) لاغلى 5 منتجات، الاغلى الاول، واللي سعرهم واحد من A لـ Z على الاسم. الـ query بتشتغل من غير error، بس فيها 4 غلطات. شغلها، قارنها بالنتيجة المتوقعة، وصلحها.`,
+      hint: 'بص على اسامي الاعمدة في النتيجة: فيه عمود ناقص، عشان فيه comma ناقصة. "السعر + 14%" يعني unit_price × 1.14. و"الاغلى الاول" محتاجة DESC، والاسعار المتساوية محتاجة عمود ترتيب تاني.',
+      explain: {
+        given: 'query بتشتغل بس بترجع حاجة غلط، ووصف للي المفروض ترجعه.',
+        steps: ['شغلها واقرا اسامي الاعمدة. هيرجع عمودين بس، اسمهم <b>category</b> و price_with_vat. الـ comma الناقصة خلت category تبقى alias.', 'unit_price * 14 / 100 دي الضريبة لوحدها، مش السعر بالضريبة. اضرب في 1.14 بدالها.', 'ORDER BY unit_price بترتب الارخص الاول، والمطلوب الاغلى الاول.', 'الاسعار المتساوية محتاجة product_name كعمود ترتيب تاني.'],
+        example: 'في الـ sample data اول صف المفروض يبقى 27 inch Monitor | Monitors | 8892، لان 7800 × 1.14 = 8892.',
+        watch: ['الـ query اللي بتشتغل مش معناها انها صح. قارن النتيجة دايما بالمطلوب.', '<code>SELECT a b</code> معناها "العمود a باسم b". ودي اشهر غلطة صامتة في SQL.']
+      },
+      walk: {
+        think: ['غلطة 1: product_name category من غير comma. الـ SQL Server بيقراها "product_name AS category"، فعمود الـ category بيختفي.', 'غلطة 2: unit_price * 14 / 100 دي الضريبة بس. السعر بالضريبة هو unit_price × 1.14.', 'غلطة 3: ORDER BY unit_price بتحط الارخص الاول. زود DESC.', 'غلطة 4: مفيش عمود يفك التعادل، فالاسعار المتساوية ممكن تيجي باي ترتيب. زود product_name.'],
+        why: ['TOP (5)، والـ comma اللي بتخلي category عمود لوحده.', 'السعر + 14%: الضرب في 1.14 بيجيب السعر والضريبة في خطوة واحدة.', 'من products.', 'الاغلى الاول، والاسعار المتساوية بالاسم.']
+      }
     }
   }
 ];
-STAGE0_QUESTIONS.forEach((q) => { if (!q.starter) q.starter = STARTER; });
+STAGE1_QUESTIONS.forEach((q) => { if (!q.starter) q.starter = STARTER; });
 
-/* Stage 0 in Arabic. Code, table and column names and SQL terms stay in English. */
-const AR0 = {
-  cairo: {
-    title: 'عملا القاهرة', topic: 'SELECT و WHERE و ORDER BY',
-    prompt: `اعرض <code>full_name</code> و <code>signup_date</code> لكل عميل الـ <code>city</code> بتاعته Cairo، والاقدم في التسجيل الاول.`,
-    hint: "اختار العمودين بعد SELECT، وفلتر بـ WHERE city = 'Cairo'، ورتب بـ ORDER BY signup_date. النص بيتكتب بين ' '.",
+/* Stage 1 · sorting by a column you don't show. The two NULL challenges after it (where NULL sorts, + vs CONCAT with NULL)
+   need ideas that Stage 1 does not teach yet, so they are kept for Stage 2 and are not part of this page. */
+const STAGE1_EXTRA = [
+  {
+    id: 'hiddensort', title: 'Sorted by a column you don\'t show', topic: 'ORDER BY a column outside SELECT', points: 6, tables: ['products'], ordered: true,
+    prompt: `The shop window shows product names only. Show just <code>product_name</code>, with the most expensive product first; equal prices A to Z by name. The price itself must <b>not</b> be in the result.`,
+    hint: 'ORDER BY can sort by any column of the table, even one that is not in SELECT: SELECT product_name … ORDER BY unit_price DESC, product_name.',
     explain: {
-      given: 'جدول <code>customers</code>. كل صف عميل، فيه المدينة اللي ساكن فيها وتاريخ تسجيله.',
-      steps: ['اختار العمودين اللي هتعرضهم: الاسم وتاريخ التسجيل.', 'سيب بس الصفوف اللي المدينة فيها Cairo بالظبط.', 'رتب الصفوف بحيث اقدم تاريخ تسجيل ييجي الاول.'],
-      example: 'في الـ sample data فيه 3 عملا في Cairo: منى (2023-02-14) ويوسف (2023-09-21) وسلمى (2024-03-28). ده اصلا ترتيبهم من الاقدم، فالنتيجة التلات صفوف دول بالترتيب ده.',
-      watch: ['Cairo بالظبط بس. العميل اللي في New Cairo ده في مدينة تانية.', 'من غير ORDER BY الـ SQL Server ممكن يرجع الصفوف باي ترتيب. لو المطلوب فيه ترتيب، اكتبه.', "النص بيتكتب بين ' ': <code>'Cairo'</code>. الـ \" \" في SQL Server معناها اسم عمود."]
+      given: 'The <code>products</code> table.',
+      steps: ['Select only the name column.', 'Sort by the price, highest first, even though the price is not shown.', 'Break ties by name.'],
+      example: 'Sample data: the result is one column. 27 inch Monitor is first and Noise-Cancelling Headphones second, because they cost the most. Webcam HD is last.',
+      watch: ['Adding unit_price to SELECT gives two columns, but the task asks for one.', 'This works because ORDER BY reads the table\'s columns. With <code>SELECT DISTINCT</code> it does not: SQL Server then only lets you sort by selected columns (Msg 145), because after duplicates are removed a hidden column no longer has one value per row.']
     },
+    solution: `SELECT product_name
+FROM products
+ORDER BY unit_price DESC, product_name;`,
     walk: {
-      think: ['ابدا من النتيجة: عمودين، وصف لكل عميل في Cairo.', 'الـ WHERE بتشيل الصفوف اللي مش عايزها قبل ما اي حاجة تتعرض.', 'الـ ASC (من الصغير للكبير) هي الـ default، واصغر تاريخ هو الاقدم.'],
-      why: ['العمودين المطلوبين بنفس ترتيب المطلوب.', 'الجدول اللي فيهم.', "سيب Cairo بس. النص بين ' '، والـ SQL Server هنا مش بيفرق بين capital و small، فـ 'cairo' هتمسك برضه.", 'الاقدم الاول. ASC هي الـ default فمش لازم تتكتب.']
-    }
-  },
-  pricerange: {
-    title: 'Accessories في رينج سعر', topic: 'AND و BETWEEN والترتيب على عمودين',
-    prompt: `اعرض <code>product_name</code> و <code>unit_price</code> للمنتجات اللي في category <b>Accessories</b> وسعرها من 300 لـ 1500، والرقمين داخلين. الاغلى الاول، واللي سعرهم واحد من A لـ Z على الاسم.`,
-    hint: 'شرطين بينهم AND: الـ category، و unit_price BETWEEN 300 AND 1500. وبعدين ORDER BY unit_price DESC, product_name.',
-    explain: {
-      given: 'جدول <code>products</code>، فيه الـ category وسعر كل منتج.',
-      steps: ['سيب category الـ Accessories بس.', 'وسيب كمان الاسعار من 300 لـ 1500 بس. الشرطين لازم يتحققوا مع بعض، فبينهم AND.', 'رتب على السعر من الكبير للصغير.', 'ولو منتجين سعرهم واحد، رتبهم على الاسم من A لـ Z.'],
-      example: 'في الـ sample data: Mechanical Keyboard بـ 1450 و USB-C Hub بـ 650 و Laptop Stand بـ 500 و Wireless Mouse بـ 350. الـ Webcam بـ 100 ارخص من الرينج، والـ Monitor ومنتجات الـ Audio في categories تانية.',
-      watch: ['"من 300 لـ 1500 والرقمين داخلين" يعني المنتج اللي بـ 300 بالظبط او 1500 بالظبط داخل. والـ <code>BETWEEN</code> بتدخل الطرفين.', 'عمود الترتيب التاني بيفرق بس لما الاول يبقى متعادل. والـ hidden data فيها منتجات بنفس السعر.']
+      think: ['What you show (SELECT) and how you sort (ORDER BY) are separate decisions.', 'ORDER BY can use any column of the rows being read, shown or not.'],
+      why: ['Only the name is shown.', 'From products.', 'Sorted by a column that is not shown, then by name for equal prices.']
     },
-    walk: {
-      think: ['شرطين لازم يتحققوا الاتنين، يبقى AND.', 'BETWEEN low AND high هي نفسها >= low AND <= high.', 'ORDER BY ينفع فيها كذا عمود: التاني بيفك التعادل في الاول.'],
-      why: ['العمودين المطلوبين.', 'من جدول products.', 'الشرط الاول: الـ category.', 'الشرط التاني بـ AND: رينج السعر بالطرفين.', 'الاغلى الاول، والاسعار المتساوية من A لـ Z على الاسم.']
-    }
-  },
-  top3: {
-    title: 'اغلى 3 منتجات', topic: 'TOP',
-    prompt: `اعرض <code>product_name</code> و <code>unit_price</code> لاغلى 3 منتجات، الاغلى الاول. ولو منتجين سعرهم واحد، اللي اسمه ييجي الاول من A لـ Z يكسب. استخدم <code>TOP</code>.`,
-    hint: 'SELECT TOP (3) … وبعدين ORDER BY unit_price DESC, product_name. الـ TOP بتاخد اول صفوف بعد الترتيب.',
-    explain: {
-      given: 'جدول <code>products</code>.',
-      steps: ['رتب كل المنتجات على السعر، الاعلى الاول.', 'فك التعادل بالاسم من A لـ Z.', 'خد اول 3 صفوف بس من الليستة المترتبة.'],
-      example: 'في الـ sample data: 27 inch Monitor (7800) الاول و Noise-Cancelling Headphones (3200) التاني. Mechanical Keyboard و Bluetooth Speaker الاتنين بـ 1450، و Bluetooth بتيجي الاول من A لـ Z، فهي التالتة.',
-      watch: ['TOP من غير ORDER BY بتجيب 3 صفوف عشوائي. الـ TOP مالهاش معنى غير مع ORDER BY.', 'ده SQL Server، يبقى <code>TOP</code> مش <code>LIMIT</code>.']
-    },
-    walk: {
-      think: ['"اغلى 3" يعني: رتب، وخد اول 3.', 'في SQL Server الـ TOP بتتكتب بعد SELECT على طول، بس بتتطبق في الاخر بعد ORDER BY.', 'التعادل على المركز التالت محتاج قاعدة، والمطلوب ادانا القاعدة: الاسم من A لـ Z.'],
-      why: ['TOP (3) بتاخد 3 صفوف. الاقواس مش لازمة بس احسن.', 'من جدول products.', 'الاغلى الاول، والاسم بيفك التعادل، فالمركز التالت يطلع نفس المنتج كل مرة.']
-    }
-  },
-  cities: {
-    title: 'المدن اللي بنبيع فيها', topic: 'DISTINCT و IS NOT NULL',
-    prompt: `اعرض كل المدن اللي العملا ساكنين فيها، كل مدينة مرة واحدة، من A لـ Z. سيب برا العملا اللي مالهمش مدينة. سمي العمود <code>city</code>.`,
-    hint: 'SELECT DISTINCT city … WHERE city IS NOT NULL … ORDER BY city.',
-    explain: {
-      given: 'جدول <code>customers</code>. ممكن كذا عميل يبقوا في نفس المدينة، وفيه عملا مدينتهم مش متسجلة (NULL).',
-      steps: ['هات عمود city.', 'شيل الصفوف اللي المدينة فيها فاضية.', 'اعرض كل مدينة مرة واحدة بس.', 'رتب من A لـ Z.'],
-      example: 'في الـ sample data: Cairo موجودة 3 مرات و Alexandria مرتين، بس كل واحدة هتظهر مرة. كريم مالوش مدينة، فمفيش صف فاضي. النتيجة Alexandria و Cairo و Giza و Mansoura.',
-      watch: ['الـ DISTINCT بتعتبر الـ NULL قيمة، فمن غير شرط هيطلعلك صف فاضي في الاول.', 'الـ NULL مش قيمة تقارنها بـ =. استخدم <code>IS NULL</code> او <code>IS NOT NULL</code>.']
-    },
-    walk: {
-      think: ['"كل مدينة مرة واحدة" هو بالظبط اللي الـ DISTINCT بتعمله في صفوف النتيجة.', 'المدينة الفاضية معناها NULL. والـ NULL عمرها ما تساوي حاجة، فليها اختبار خاص: IS NULL و IS NOT NULL.'],
-      why: ['الـ DISTINCT بتشيل الصفوف المتكررة من النتيجة.', 'من customers.', 'شيل العملا اللي مالهمش مدينة.', 'من A لـ Z.']
-    }
-  },
-  referee: {
-    title: 'مين ماجاش من طرف عميل 2', topic: 'الـ NULL في الشروط',
-    prompt: `اعرض <code>full_name</code> لكل عميل <b>ماجاش</b> من طرف العميل رقم 2، ومعاهم العملا اللي ماجوش من طرف حد خالص. الترتيب مش مهم.`,
-    hint: 'الشرط referred_by <> 2 مش بيبقى true في صفوف الـ NULL: اي مقارنة مع NULL نتيجتها unknown، و WHERE بترمي اي صف نتيجته unknown. زود OR referred_by IS NULL.',
-    explain: {
-      given: 'جدول <code>customers</code>. العمود <code>referred_by</code> فيه رقم العميل اللي جاب العميل ده، او NULL لو محدش جابه.',
-      steps: ['هات العملا اللي جم من طرف حد غير العميل 2.', 'وهات كمان العملا اللي ماجوش من طرف حد خالص (referred_by فيها NULL).', 'اعرض اساميهم.'],
-      example: 'في الـ sample data: يوسف وعمر جم من طرف العميل 2، فمش هيظهروا. منى واحمد وسلمى ماجوش من طرف حد، فهيظهروا مع مريم وكريم ومحمود. يعني 6 اسامي.',
-      watch: ['<code>NULL &lt;&gt; 2</code> مش true. نتيجتها unknown، والـ WHERE بتسيب بس الصفوف اللي الشرط فيها true.', 'متكتبش <code>= NULL</code> ابدا. استخدم <code>IS NULL</code>.']
-    },
-    walk: {
-      think: ['في SQL الشرط ليه 3 نتايج: true و false و unknown. واي مقارنة مع NULL نتيجتها unknown.', 'الـ WHERE بتسيب الصفوف اللي شرطها true بس، فصفوف الـ NULL بتختفي من referred_by <> 2.', 'رجع صفوف الـ NULL بنفسك بـ OR … IS NULL.'],
-      why: ['الاسم بس هو المطلوب.', 'من customers.', 'اللي جم من طرف حد غير العميل 2.', 'او اللي ماجوش من طرف حد. من غير السطر ده العملا دول هيضيعوا.']
-    }
-  },
-  like: {
-    title: 'عملا Gmail اساميهم بتبدا بـ M', topic: 'LIKE patterns',
-    prompt: `اعرض <code>full_name</code> و <code>email</code> للعملا اللي اسمهم بيبدا بـ M والـ email بتاعهم بيخلص بـ <code>@gmail.com</code>، ومترتبين على الاسم من A لـ Z.`,
-    hint: "الـ % معناها اي عدد من الحروف. الاسم اللي بيبدا بـ M هو LIKE 'M%'. والـ email اللي بيخلص بـ @gmail.com هو LIKE '%@gmail.com'.",
-    explain: {
-      given: 'جدول <code>customers</code>. فيه emails ناقصة (NULL).',
-      steps: ['سيب الاسامي اللي بتبدا بحرف M.', 'وسيب كمان الـ emails اللي بتخلص بـ <code>@gmail.com</code> بالظبط.', 'اعرض الاسم والـ email ومترتبين على الاسم.'],
-      example: 'في الـ sample data: منى ومحمود عندهم Gmail. مريم اسمها بيبدا بـ M بس بتستخدم Yahoo، فمش هتظهر. النتيجة Mahmoud Ali وبعده Mona Hassan.',
-      watch: ['مكان الـ % بيفرق. <code>\'%M%\'</code> بتلاقي M في اي حتة، فـ "Ali Mansour" هيطلع غلط.', '<code>\'%gmail.com%\'</code> بتمسك كمان حاجات شبهها زي <code>@gmail.com.eg</code>. و"بيخلص بـ" معناها مفيش حاجة بعدها.', 'في الـ database دي، زي اغلب اعدادات SQL Server، الـ LIKE مش بتفرق بين capital و small.']
-    },
-    walk: {
-      think: ['الـ LIKE بتقارن النص بـ pattern. والـ % معناها "اي حروف، او ولا حرف".', 'بيبدا بـ: الجزء الثابت الاول وبعدين %. بيخلص بـ: % الاول وبعدين الجزء الثابت.', 'الشرطين لازم يتحققوا، يبقى AND.'],
-      why: ['العمودين المطلوبين.', 'من customers.', 'حرف M وبعده اي حاجة.', 'اي حاجة وبعدها @gmail.com بالظبط في الاخر. والـ email الـ NULL عمره ما يتطابق، فبيطلع برا.', 'من A لـ Z على الاسم.']
-    }
-  },
-  totals: {
-    title: 'اجمالي الـ order بعد الـ discount', topic: 'اعمدة محسوبة و ISNULL',
-    prompt: `لكل order اعرض <code>order_id</code> و <code>order_total</code>: الـ quantity × الـ unit_price، ناقص الـ discount، ومقرب لرقمين عشريين. رتب على <code>order_id</code>. الـ discount الـ NULL معناه مفيش discount.`,
-    hint: 'quantity * unit_price * (1 - discount) بتشتغل بس لما الـ discount يبقى له قيمة. ISNULL(discount, 0) بتحول الـ discount الناقص لـ 0. حط كل ده جوه ROUND(…, 2) وسميه AS order_total.',
-    explain: {
-      given: 'جدول <code>orders</code>. الـ <code>discount</code> كسر، يعني 0.10 معناها 10% خصم. والـ NULL معناها مفيش discount.',
-      steps: ['اضرب الـ quantity في السعر اللي اتدفع.', 'اطرح الـ discount: اضرب في (1 − discount).', 'اعتبر الـ discount الناقص بـ 0.', 'قرب لرقمين عشريين وسمي العمود order_total.'],
-      example: 'order 102: يعني 1 × 7800 × (1 − 0.10) = 7020. و order 101 مفيهوش discount: يعني 2 × 350 × (1 − 0) = 700.',
-      watch: ['اي حساب فيه NULL نتيجته NULL. من غير ISNULL، كل order مفيهوش discount هيطلع الـ total بتاعه NULL.', 'استخدم الـ unit_price اللي في <code>orders</code>، ده السعر اللي اتدفع فعلا.']
-    },
-    walk: {
-      think: ['اكتب المعادلة الاول: quantity × price × (1 − discount).', 'وبعدين اسال: ايه اللي يحصل لو قيمة فيهم NULL؟ هنا الـ NULL معناها "مفيش discount"، يعني 0.', 'ادي العمود المحسوب اسم بـ AS، والا هيظهر (No column name).'],
-      why: ['الـ order id الاول.', 'ISNULL(discount, 0) بتحط 0 مكان الـ NULL، وبعدين الحساب، مقرب لرقمين وباسم order_total.', 'من orders.', 'مترتب على الـ order id.']
-    }
-  },
-  size: {
-    title: 'تصنيف حجم الـ order', topic: 'CASE WHEN',
-    prompt: `لكل order اعرض <code>order_id</code> و <code>quantity</code> وعمود <code>order_size</code>: <code>Bulk</code> لـ 10 قطع او اكتر، و <code>Medium</code> من 3 لـ 9، و <code>Small</code> لقطعة او اتنين. رتب على <code>order_id</code>.`,
-    hint: "CASE WHEN quantity >= 10 THEN 'Bulk' WHEN quantity >= 3 THEN 'Medium' ELSE 'Small' END AS order_size. الـ CASE بتقف عند اول WHEN تبقى true.",
-    explain: {
-      given: 'جدول <code>orders</code> وعمود <code>quantity</code> اللي فيه.',
-      steps: ['اعرض الـ order id والـ quantity.', 'زود عمود تالت بيحول الـ quantity لكلمة.', '10 او اكتر يبقى Bulk، ومن 3 لـ 9 يبقى Medium، واقل من كده Small.', 'رتب على الـ order id.'],
-      example: 'order 107 فيه 10 قطع، يبقى Bulk. و order 105 فيه 3، يبقى Medium. و order 101 فيه 2، يبقى Small.',
-      watch: ['الحدود مهمة: 10 بالظبط تبقى Bulk، و 3 بالظبط تبقى Medium.', 'اكتب الكلمات زي ما هي بالظبط، باول حرف capital.', 'الـ CASE بتشيك على الـ WHENs من فوق لتحت وبتقف عند اول واحدة true، فابدا بالفئة الاكبر.']
-    },
-    walk: {
-      think: ['الـ CASE هي الـ if / else في SQL، وبترجع قيمة واحدة لكل صف.', 'شيك على الفئة الاكبر الاول. لما WHEN تبقى true الباقي بيتعدى، فكل WHEN محتاجة حدها الادنى بس.', 'الـ ELSE بتمسك اي حاجة فاضلة.'],
-      why: ['عمودين عاديين، وبعدهم الـ CASE.', 'بداية الـ CASE.', '10 او اكتر.', 'مش 10 او اكتر بس 3 او اكتر: يعني من 3 لـ 9.', 'اي حاجة تانية: 1 او 2.', 'الـ END بتقفل الـ CASE، والـ AS بتسمي العمود الجديد.', 'من orders.', 'مترتب على الـ order id.']
-    }
-  },
-  status: {
-    title: 'الـ orders حسب الـ status', topic: 'GROUP BY و COUNT(*) مقابل COUNT(column)',
-    prompt: `لكل <code>status</code> اعرض عدد الـ orders اللي ليها الـ status ده (<code>orders</code>)، وكام واحد منهم ليه discount متسجل (<code>discounted_orders</code>، يعني الـ discount مش NULL). رتب على <code>orders</code> من الاكتر للاقل، وبعدين على <code>status</code> من A لـ Z.`,
-    hint: 'GROUP BY status بتطلع صف لكل status. و COUNT(*) بتعد الصفوف، و COUNT(discount) بتعد بس الصفوف اللي الـ discount فيها مش NULL.',
-    explain: {
-      given: 'جدول <code>orders</code>. كل order ليه status زي Delivered او Cancelled، و discount ممكن يبقى NULL.',
-      steps: ['اعمل مجموعة لكل status.', 'في كل مجموعة، عد كل الـ orders.', 'وفي كل مجموعة كمان، عد الـ orders اللي ليها قيمة discount.', 'رتب على العدد الاول من الكبير للصغير، وفك التعادل باسم الـ status.'],
-      example: 'في الـ sample data: فيه 10 orders حالتهم Delivered، منهم 4 ليهم discount. و Cancelled فيها 2، منهم 1 ليه discount. و Pending و Shipped كل واحد فيهم order واحد من غير discount، ولما يتعادلوا بـ 1، Pending تيجي الاول من A لـ Z.',
-      watch: ['<code>COUNT(*)</code> بتعد الصفوف. و <code>COUNT(column)</code> بتتجاهل الـ NULLs في العمود ده. والفرق ده هو لب السؤال.', 'اي عمود في SELECT مش جوه COUNT او SUM وغيرهم، لازم يبقى في GROUP BY.']
-    },
-    walk: {
-      think: ['"لكل status" يعني GROUP BY status: صف واحد في النتيجة لكل status.', 'الـ aggregates زي COUNT بتشتغل على كل مجموعة لوحدها.', 'COUNT(*) بتعد الصفوف، و COUNT(discount) بتعد الـ discounts اللي مش NULL، فـ query واحدة بتجيب الرقمين.'],
-      why: ['الـ status بتاع المجموعة.', 'كل الصفوف اللي في المجموعة.', 'الصفوف اللي الـ discount فيها مش NULL بس.', 'من orders.', 'مجموعة لكل status.', 'الـ status الاكتر الاول. الـ ORDER BY ينفع فيها الـ alias بتاع SELECT، لانها بتشتغل بعد SELECT.']
-    }
-  },
-  category: {
-    title: 'صافي الـ revenue لكل category', topic: 'JOIN و SUM و GROUP BY',
-    prompt: `لكل <code>category</code> اعرض صافي الـ revenue من الـ orders اللي حالتها <b>Delivered</b> باسم <code>net_revenue</code>: الـ quantity × السعر اللي اتدفع × (1 − discount)، والـ discount الـ NULL بـ 0، متجمعين ومقربين لرقمين عشريين. الاعلى revenue الاول.`,
-    hint: "اعمل JOIN بين orders و products على product_id عشان تجيب الـ category. فلتر status = 'Delivered' في WHERE، و GROUP BY category، واعمل SUM لاجمالي كل order. استخدم o.unit_price (السعر اللي اتدفع) مش p.unit_price.",
-    explain: {
-      given: '<code>orders</code> فيه الـ quantities والاسعار اللي اتدفعت والـ discounts. و <code>products</code> فيه الـ category. والاتنين بيشتركوا في <code>product_id</code>.',
-      steps: ['اربط كل order بالمنتج بتاعه عشان تعرف الـ category.', 'سيب الـ orders اللي حالتها Delivered بس.', 'احسب صافي كل order، زي سؤال "اجمالي الـ order بعد الـ discount".', 'اجمع القيم لكل category وقربها.', 'رتب من الاعلى revenue للاقل.'],
-      example: 'في الـ sample data، الـ Audio: order 103 بـ 3200، و order 110 بـ 3200 × 0.90 = 2880، يبقى الـ Audio بـ 6080. و order 108 حالته Shipped مش Delivered، فمش بيتحسب.',
-      watch: ['الجدولين فيهم عمود <code>unit_price</code>. لو كتبته من غير alias الجدول هيطلعلك "Ambiguous column name". السعر اللي اتدفع هو <code>o.unit_price</code>، و <code>p.unit_price</code> ده سعر الليستة النهارده.', 'فلتر الصفوف بـ WHERE قبل التجميع.']
-    },
-    walk: {
-      think: ['الـ category في products والفلوس في orders، فاربطهم على product_id المشترك.', 'الـ SQL Server بيقرا FROM/JOIN الاول، وبعدين WHERE، وبعدين GROUP BY، وبعدين SELECT. فالـ WHERE بتشيل الـ orders اللي مش Delivered قبل الجمع.', 'الـ aliases القصيرة (o و p) بتقول كل عمود جاي من انهي جدول.'],
-      why: ['الـ category من products.', 'قيمة كل order، متجمعة لكل category، ومقربة وليها اسم.', 'جدول orders بالـ alias o.', 'اربط كل order بالمنتج بتاعه.', 'الـ Delivered بس هي اللي بتتحسب.', 'صف لكل category.', 'الاعلى revenue الاول.']
-    }
-  },
-  loyal: {
-    title: 'العملا الدايمين', topic: 'JOIN و WHERE مقابل HAVING',
-    prompt: `اعرض <code>full_name</code> لكل عميل عنده <b>3 orders Delivered على الاقل</b>، والعدد ده باسم <code>delivered_orders</code>. الاكتر orders الاول، وبعدين الاسم من A لـ Z. ممكن عميلين مختلفين يبقى ليهم نفس الاسم، فاحسب كل عميل لوحده.`,
-    hint: "اعمل JOIN بين customers و orders، وحط o.status = 'Delivered' في WHERE، و GROUP BY c.customer_id, c.full_name، وسيب المجموعات اللي HAVING COUNT(*) >= 3.",
-    explain: {
-      given: '<code>customers</code> و <code>orders</code>، مربوطين بـ <code>customer_id</code>.',
-      steps: ['اربط كل order بالعميل بتاعه.', 'سيب الـ orders اللي حالتها Delivered بس. ده filter على الصفوف.', 'عد الـ orders الـ Delivered لكل عميل.', 'سيب العملا اللي عددهم 3 او اكتر بس. ده filter على المجموعات.', 'رتب على العدد من الكبير للصغير، وبعدين على الاسم.'],
-      example: 'في الـ sample data: منى عندها 4 orders بس واحد منهم Pending، يعني عندها 3 Delivered وداخلة. يوسف عنده 2 Delivered بس (التالت Shipped)، فمش داخل.',
-      watch: ['الـ WHERE بتفلتر الصفوف قبل التجميع، والـ HAVING بتفلتر المجموعات بعد العد. والشرط على COUNT(*) مكانه HAVING.', '"على الاقل 3" يعني 3 بالظبط داخلة، فاستخدم <code>&gt;= 3</code>.', 'اعمل GROUP BY على الـ customer id مش على الاسم بس. والا عميلين بنفس الاسم هيتحسبوا واحد.']
-    },
-    walk: {
-      think: ['فيه نوعين filter مختلفين: "Delivered" ده على كل صف order، و"على الاقل 3" ده على اجمالي كل عميل.', 'filter الصفوف مكانه WHERE (قبل التجميع)، و filter المجموعات مكانه HAVING (بعد العد).', 'اعمل GROUP BY على الـ id، لانه هو اللي بيميز العميل فعلا، والاسم بيتزود عشان يتعرض.'],
-      why: ['اسم العميل وعدد الـ orders الـ Delivered بتاعته.', 'جدول customers بالـ alias c.', 'كل عميل مربوط بالـ orders بتاعته.', 'filter على الصفوف: الـ Delivered بس هي اللي بتتعد.', 'مجموعة لكل عميل.', 'filter على المجموعات: سيب اللي عندهم 3 او اكتر.', 'الاكتر orders الاول، والتعادل بالاسم.']
-    }
-  },
-  fix: {
-    title: 'صلح تقرير المدن', topic: 'Debugging: ترتيب تنفيذ الـ query',
-    prompt: `زميلك كتب الـ query اللي في الـ editor. المفروض تعرض لكل <code>city</code> عدد الـ orders اللي حالتها <b>Delivered</b> باسم <code>delivered_orders</code>، للمدن اللي عندها 2 او اكتر بس، ومترتبة على <code>delivered_orders</code> من الاكتر للاقل وبعدين المدينة من A لـ Z. فيها 4 غلطات. شغلها، اقرا الـ errors، وصلحها.`,
-    hint: 'الـ SQL Server بيقرا FROM وبعدين WHERE وبعدين GROUP BY وبعدين HAVING وبعدين SELECT وبعدين ORDER BY. يعني الـ WHERE مش شايفة الـ alias اللي اسمه delivered_orders، ومينفعش يبقى فيها COUNT(*): الشرط ده مكانه HAVING. و o.status مش في GROUP BY. و filter الـ Delivered ناقص، والعمود اللي بيفك التعادل ناقص.',
-    explain: {
-      given: 'query مش بتشتغل، ووصف للي المفروض ترجعه.',
-      steps: ['شغلها واقرا رسايل الـ error. هتوريك غلطتين منهم.', 'اي عمود في SELECT لازم يبقى في GROUP BY او جوه aggregate. والـ status مش مطلوب اصلا، فشيله.', 'الشرط على العدد ده filter على المجموعات. انقله من WHERE لـ HAVING، واكتب COUNT(*) تاني بدل الـ alias.', 'المطلوب يعد الـ orders الـ Delivered بس، والـ filter ده على الصفوف فمكانه WHERE.', 'المطلوب يرتب على المدينة لما العدد يتعادل.'],
-      example: 'في الـ sample data: Cairo فيها 7 orders Delivered (منى 3 ويوسف 2 وسلمى 2)، و Alexandria فيها 2. و Giza فيها 1 بس، فمش هتظهر.',
-      watch: ['ترتيب قراية الـ SQL Server للـ query: FROM ← WHERE ← GROUP BY ← HAVING ← SELECT ← ORDER BY. والـ alias اللي بيتعمل في SELECT موجود للـ ORDER BY بس.', 'رسايل الـ error هنا هي رسايل SQL Server الحقيقية، فلما تتعلم تقراها هتفيدك في الشغل.']
-    },
-    walk: {
-      think: ['غلطة 1: o.status في SELECT ومش في GROUP BY. والمطلوب مش عايزه، فبيتشال.', 'غلطة 2: WHERE delivered_orders >= 2. الـ WHERE بتشتغل قبل SELECT (لسه مفيش alias) وقبل التجميع (لسه مفيش عدد). فبتبقى HAVING COUNT(*) >= 2.', 'غلطة 3: مفيش حاجة بتقصر العد على الـ orders الـ Delivered. ده filter على الصفوف، فمكانه WHERE.', 'غلطة 4: العمود اللي بيفك التعادل c.city ناقص من ORDER BY.'],
-      why: ['المدينة والعدد، والـ status اتشال.', 'جدول orders بالـ alias o.', 'كل order مربوط بالعميل بتاعه.', 'filter على الصفوف: Delivered بس.', 'صف لكل مدينة.', 'filter على المجموعات: 2 او اكتر. الـ HAVING بتكرر COUNT(*) لان الـ alias لسه مش موجود.', 'الـ ORDER BY بتشتغل في الاخر، فالـ alias هنا شغال، والمدينة بتفك التعادل.']
-    }
-  },
-  noorders: {
-    title: 'عملا عمرهم ما طلبوا', topic: 'LEFT JOIN و NOT IN مع الـ NULL',
-    prompt: `اعرض <code>full_name</code> لكل عميل عمره ما عمل order خالص (باي status)، ومترتبين من A لـ Z. افتكر ان الـ guest checkouts متسجلة في <code>orders</code> والـ <code>customer_id</code> بتاعها NULL.`,
-    hint: 'اعمل LEFT JOIN من customers لـ orders، وسيب الصفوف اللي ناحية الـ order فيها NULL (WHERE o.order_id IS NULL). او استخدم NOT EXISTS. وخلي بالك من NOT IN لما الليستة ممكن يبقى فيها NULL.',
-    explain: {
-      given: '<code>customers</code> و <code>orders</code>، مربوطين بـ <code>customer_id</code>. والـ guest orders مالهاش عميل، فالـ customer_id بتاعها NULL.',
-      steps: ['اربط كل عميل بالـ orders بتاعته، وسيب العملا اللي مالهمش orders كمان.', 'العميل اللي مالوش orders بياخد NULLs في اعمدة الـ order.', 'سيب العملا دول بالظبط.', 'رتب على الاسم.'],
-      example: 'في الـ sample data: عمر وكريم مالهمش orders، فالنتيجة Karim Mostafa وبعده Omar Khaled.',
-      watch: ['<code>NOT IN (SELECT customer_id FROM orders)</code> بترجع ولا صف لو الليستة دي فيها NULL واحدة بس: "x مش في (1، 2، NULL)" نتيجتها unknown، عمرها ما تبقى true. والـ hidden data فيها guest orders.', 'الـ INNER JOIN بيشيل العملا اللي مالهمش orders، ودول بالظبط اللي انت عايزهم. استخدم LEFT JOIN.']
-    },
-    walk: {
-      think: ['"عملا مالهمش مقابل في orders" هو الـ pattern المشهور LEFT JOIN … IS NULL (اسمه anti-join).', 'الـ LEFT JOIN بيسيب كل العملا، ولو مفيش order مطابق، اعمدة الـ order بترجع NULL.', 'اختبر عمود عمره ما يبقى NULL في order حقيقي، زي order_id.', 'الـ NOT EXISTS بتشتغل برضه. انما NOT IN بتبوظ اول ما الـ subquery ترجع NULL.'],
-      why: ['الاسم بس.', 'كل العملا.', 'الـ orders بتاعتهم لو فيه، ولو مفيش بيرجع NULLs.', 'سيب العملا اللي مفيش order مطابق ليهم.', 'من A لـ Z.']
-    }
-  },
-  monthly: {
-    title: 'المبيعات الشهرية في 2024', topic: 'التواريخ و GROUP BY على expression',
-    prompt: `لكل شهر في <b>2024</b> اعرض رقم الشهر باسم <code>order_month</code>، وعدد الـ orders الـ <b>Delivered</b> باسم <code>orders</code>، وصافي الـ revenue بتاعهم باسم <code>net_revenue</code> (الـ quantity × الـ unit_price × (1 − discount)، والـ discount الـ NULL بـ 0، مقرب لرقمين عشريين). الشهور اللي فيها مبيعات بس. رتب على الشهر.`,
-    hint: "WHERE status = 'Delivered' AND YEAR(order_date) = 2024، وبعدين GROUP BY MONTH(order_date). وفي SELECT اكتب MONTH(order_date) AS order_month و COUNT(*) والـ SUM المقرب.",
-    explain: {
-      given: 'جدول <code>orders</code>. والـ <code>order_date</code> نوعه date.',
-      steps: ['سيب الـ orders الـ Delivered اللي في 2024 بس.', 'جمع الـ orders على شهر التاريخ بتاعها.', 'لكل شهر، عد الـ orders واجمع صافي قيمتها.', 'رتب على رقم الشهر.'],
-      example: 'في الـ sample data، يناير 2024: order 101 (700) و order 102 (7020)، يعني 2 orders و 7720.00. وفبراير فيه order 103 بس، لان 104 حالته Cancelled.',
-      watch: ['الـ orders اللي يوم 31 ديسمبر 2023 او 1 يناير 2025 مينفعش تتحسب. و <code>YEAR(order_date) = 2024</code> بتظبط الطرفين.', 'الـ GROUP BY ينفع تعمله على expression زي <code>MONTH(order_date)</code>، انما مينفعش تعمل GROUP BY على الـ alias اللي اسمه order_month.']
-    },
-    walk: {
-      think: ['المجموعات هنا شهور، فاعمل GROUP BY MONTH(order_date).', 'فلتر السنة الاول في WHERE، والا يناير 2024 ويناير 2025 هيقعوا في نفس المجموعة.', 'الـ GROUP BY بتشتغل قبل SELECT، فبتكرر MONTH(order_date) بدل الـ alias. والـ ORDER BY بتشتغل بعد SELECT، فالـ alias شغال فيها.'],
-      why: ['رقم الشهر وليه اسم.', 'عدد الـ orders الـ Delivered في الشهر ده.', 'صافي قيمتهم، متجمع ومقرب.', 'من orders.', 'الـ Delivered بس.', 'و 2024 بس.', 'مجموعة لكل شهر، على الـ expression.', 'يناير الاول.']
-    }
-  },
-  units: {
-    title: 'الوحدات المباعة، والصفر داخل', topic: 'شروط الـ LEFT JOIN في ON',
-    prompt: `لـ <b>كل</b> منتج اعرض <code>product_name</code> و <code>units_2025</code>: اجمالي الـ quantity في الـ orders الـ <b>Delivered</b> اللي تاريخها في <b>2025</b>. والمنتجات اللي مالهاش orders زي دي تظهر بـ <b>0</b>. رتب على <code>units_2025</code> من الاكتر للاقل، وبعدين الاسم من A لـ Z.`,
-    hint: 'اعمل LEFT JOIN لـ orders وحط شرط الـ status والسنة جوه ON مش في WHERE. وبعدين ISNULL(SUM(o.quantity), 0) بتحول المجاميع الفاضية لـ 0.',
-    explain: {
-      given: '<code>products</code> و <code>orders</code>، مربوطين بـ <code>product_id</code>.',
-      steps: ['ابدا من كل المنتجات، عشان ولا منتج يضيع.', 'اربط بيها الـ orders الـ Delivered اللي في 2025 بس.', 'اجمع الـ quantities لكل منتج.', 'اعرض 0 للمنتج اللي متربطش بيه حاجة.', 'رتب على الوحدات، وبعدين على الاسم.'],
-      example: 'في الـ sample data: Wireless Mouse باع 12 وحدة (order 113) و USB-C Hub باع 2 (order 112). و Laptop Stand الـ order بتاعه في 2025 اتلغى، فبيظهر بـ 0 زي باقي المنتجات.',
-      watch: ['مع الـ LEFT JOIN، اي شرط على الجدول اللي على اليمين لو حطيته في WHERE بيرمي المنتجات اللي مالهاش مقابل، لان اعمدة الـ order بتاعتها NULL. وده بيرجع الـ LEFT JOIN كانه INNER JOIN. حط الشروط دي في ON.', 'الـ SUM على ولا صف نتيجتها NULL مش 0. حطها جوه ISNULL(…, 0).', 'اجمع الـ quantity بـ SUM. الـ COUNT هتعد الـ orders مش الوحدات.']
-    },
-    walk: {
-      think: ['"كل منتج، والصفر داخل" يعني جدول products هو اللي بيقود الـ query، بـ LEFT JOIN.', 'الـ ON بتحدد انهي orders تتربط بكل منتج. والـ WHERE بتشتغل بعد الـ JOIN وبتشيل صفوف كاملة. والمنتج اللي مفيش order اتربط بيه اعمدة الـ order بتاعته NULL، فاي شرط عليها في WHERE بيشيله.', 'فشروط الـ status والسنة مكانها ON، والمجاميع الفاضية بتبقى 0 بـ ISNULL.'],
-      why: ['اسم المنتج.', 'اجمالي الوحدات، والـ ISNULL بتحول "مفيش orders" (NULL) لـ 0.', 'كل المنتجات بالـ alias p.', 'اربط الـ orders…', '…بتاعة المنتج ده…', '…اللي اتسلمت…', '…في 2025. والمنتجات اللي مالهاش مقابل بتفضل بـ NULLs.', 'مجموعة لكل منتج.', 'الاكتر وحدات الاول، والتعادل بالاسم.']
+    ar: {
+      title: 'مترتب على عمود مش ظاهر', topic: 'ORDER BY على عمود برا SELECT',
+      prompt: `فاترينة المحل بتعرض اسامي المنتجات بس. اعرض <code>product_name</code> بس، والاغلى الاول، واللي سعرهم واحد من A لـ Z على الاسم. السعر نفسه <b>مش</b> لازم يظهر في النتيجة.`,
+      hint: 'الـ ORDER BY ينفع ترتب بيها على اي عمود في الجدول، حتى لو مش في SELECT: SELECT product_name … ORDER BY unit_price DESC, product_name.',
+      explain: {
+        given: 'جدول <code>products</code>.',
+        steps: ['اختار عمود الاسم بس.', 'رتب على السعر من الاعلى، حتى لو السعر مش ظاهر.', 'فك التعادل بالاسم.'],
+        example: 'في الـ sample data النتيجة عمود واحد. 27 inch Monitor الاول و Noise-Cancelling Headphones التاني، لانهم الاغلى. و Webcam HD في الاخر.',
+        watch: ['لو زودت unit_price في SELECT هيطلع عمودين، والمطلوب عمود واحد.', 'ده شغال لان الـ ORDER BY بتقرا اعمدة الجدول. انما مع <code>SELECT DISTINCT</code> لا: الـ SQL Server ساعتها بيخليك ترتب على الاعمدة اللي اخترتها بس (Msg 145)، لان بعد ما المتكرر بيتشال، العمود المخفي مبقاش ليه قيمة واحدة لكل صف.']
+      },
+      walk: {
+        think: ['اللي بتعرضه (SELECT) واللي بترتب بيه (ORDER BY) قرارين منفصلين.', 'الـ ORDER BY ينفع تستخدم فيها اي عمود من الصفوف اللي بتتقرا، ظاهر او مش ظاهر.'],
+        why: ['الاسم بس هو اللي بيظهر.', 'من products.', 'مترتب على عمود مش ظاهر، وبعدين الاسم للاسعار المتساوية.']
+      }
     }
   }
-};
-STAGE0_QUESTIONS.forEach((q) => { q.ar = AR0[q.id]; });
-STAGE0_QUESTIONS.find((q) => q.id === 'top3').rule.tagAr = 'لازم TOP';
-STAGE0_QUESTIONS.find((q) => q.id === 'top3').rule.messageAr = 'لازم تستخدم TOP';
+];
+STAGE1_QUESTIONS.push(STAGE1_EXTRA.find((q) => q.id === 'hiddensort'));
+/* Final order (easier first) and points, 100 in total. */
+(() => {
+  const order = ['pick', 'hiddensort', 'rename', 'stockvalue', 'sortmix', 'distinctpairs', 'top5', 'ties', 'boxes', 'paging', 'fixvat'];
+  const pts = { pick: 5, hiddensort: 7, rename: 8, stockvalue: 8, sortmix: 8, distinctpairs: 8, top5: 10, ties: 10, boxes: 10, paging: 12, fixvat: 14 };
+  STAGE1_QUESTIONS.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  STAGE1_QUESTIONS.forEach((q) => { q.points = pts[q.id]; if (!q.starter) q.starter = STARTER; });
+})();
 
 /* Stages 2 on: the "Watch out" list is written next to each challenge and lives with Explain (the Hint tab shows it),
    and an empty editor gets the starter comment. */
@@ -2772,14 +2610,14 @@ STAGES.push(
       cust: REC('Bring every table to one row per customer before joining, so a count of customers stays a count of customers.', 'وصل كل جدول لصف لكل عميل قبل الـ join، عشان عد العملا يفضل عد عملا.', [LC('game-play-analysis-iv', 'Game Play Analysis IV'), LC('customers-who-bought-all-products', 'Customers Who Bought All Products')]),
       behave: REC('Compare groups with a CASE label, count people with DISTINCT, and say what the numbers show, not what caused them.', 'قارن المجموعات بـ label من CASE، وعد الناس بـ DISTINCT، وقول الارقام بتوري ايه، مش ايه اللي عملها.', [LC('confirmation-rate', 'Confirmation Rate'), LC('queries-quality-and-percentage', 'Queries Quality and Percentage')])
     },
-    next: G('Retake the placement test (Stage 0) and compare your score with the first time.', 'اعمل اختبار تحديد المستوى (مرحلة 0) تاني وقارن درجتك باول مرة.')
+    next: G('That was the last week. Ask your instructor for the final standings, then redo the challenges you missed.', 'ده كان اخر اسبوع. اسال المدرب على الترتيب النهائي، وبعدين اعمل تاني التحديات اللي فاتتك.')
   }
 );
 STAGES[1].next = G('Stage 2: filtering with WHERE, AND / OR, IN, BETWEEN, LIKE, and the NULL traps.', 'مرحلة 2: الفلترة بـ WHERE و AND و OR و IN و BETWEEN و LIKE، وفخاخ الـ NULL.');
 STAGES.forEach((s) => { if (s.next && s.next.href === undefined) s.next.href = null; });
 
 /* This page is week 1: only its own stage. */
-STAGES.splice(0, STAGES.length, ...STAGES.filter((s) => s.id === 's0'));
+STAGES.splice(0, STAGES.length, ...STAGES.filter((s) => s.id === 's1'));
 const WEEK_NO = 1;
 const RESULTS_URL = "https://script.google.com/macros/s/AKfycbygxtpdkgYqRvHmEuLVK5zo8MdExIIrm7h-RE6bgzZTNYs3XQFZkAD0tHbeLevh_w_f/exec";
 
@@ -3387,7 +3225,8 @@ function renderStartTexts() {
   else $('#stagePick').querySelectorAll('label').forEach((lb, k) => { const s = STAGES[k]; lb.querySelector('b').textContent = L(s.title); lb.querySelector('small').textContent = t('stageMeta', { q: s.questions.length, m: s.minutes }); });
   $('#heroLede').textContent = L(STAGE.blurb);
   $('#statCount').textContent = QUESTIONS.length;
-  $('#trackRow').innerHTML = TRACK.map((x, k) => { const ready = STAGES.some((s) => s.no === k); return `<span class="${STAGE.no === k ? 'on' : ''}"><i>${k}</i>${esc(L(x))}${ready ? '' : ` · ${esc(t('comingSoon'))}`}</span>`; }).join('');
+  // The weekly course has no placement test: the track starts at Stage 1.
+  $('#trackRow').innerHTML = TRACK.map((x, k) => { if (k === 0) return ''; const ready = STAGES.some((s) => s.no === k); return `<span class="${STAGE.no === k ? 'on' : ''}"><i>${k}</i>${esc(L(x))}${ready ? '' : ` · ${esc(t('comingSoon'))}`}</span>`; }).join('');
   updateDur(); paintEngine(); paintResume(); paintCode();
 }
 function paintResume() {
@@ -3519,7 +3358,8 @@ function cardHtml(i) {
   const full = helpMult(i) < 1 ? t('cardPts', { e: num(q.points * helpMult(i)), m: q.points }) : t('pts', { n: q.points });
   const right = run && st !== 'pass' ? t('testsOf', { a: run.passed, b: run.total }) : full;
   const bar = run ? `<div class="tbar" aria-hidden="true">${run.tests.map((x) => `<i class="${run.rule ? 'f' : x.status === 'pass' ? 'p' : 'f'}"></i>`).join('')}</div>` : '';
-  const chips = (st === 'pass' ? '' : `<span class="chip">${esc(Q(q, 'topic'))}</span>${run && run.rule ? `<span class="chip rule">${esc(ruleTag(q))}</span>` : ''}`) + helpChip(i);
+  // No topic before submitting: even the group name ("LEFT / FULL JOIN") would name the solution. The review shows it.
+  const chips = (st === 'pass' ? '' : (run && run.rule ? `<span class="chip rule">${esc(ruleTag(q))}</span>` : '')) + helpChip(i);
   return `<button type="button" class="tc ${i === S.current ? 'glow' : ''}" data-i="${i}" aria-label="${esc(t('challengeN', { n: i + 1, title: Q(q, 'title') }))}">
     <span class="r">${markHtml(i, i === S.current)}<b>${esc(Q(q, 'title'))}</b><small>${right}</small></span>
     ${chips || bar || draft ? `<span class="r2">${chips}${draft ? `<span class="draft">${t('draft')}</span>` : ''}${bar}</span>` : ''}
@@ -3580,7 +3420,7 @@ function renderPanel(keepEditor) {
   const i = S.current, q = QUESTIONS[i];
   renderHead();
   $('#qname').textContent = Q(q, 'title');
-  $('#qtopic').textContent = Q(q, 'topic') + (q.level === 'Advanced' ? ' · ' + t('advanced') : '');
+  $('#qtopic').textContent = stageLabel() + (q.level === 'Advanced' ? ' · ' + t('advanced') : '');
   $('#qrule').hidden = !q.rule; if (q.rule) $('#qrule').textContent = ruleTag(q);
   $('#qpts').textContent = helpMult(i) < 1 ? t('cardPts', { e: num(q.points * helpMult(i)), m: q.points }) : t('pts', { n: q.points });
   $('#qpts').className = 'chip' + (S.solCost[i] ? ' cost0' : S.hintCost[i] ? ' rule' : '');
