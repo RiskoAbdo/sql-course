@@ -583,6 +583,12 @@ button.vars-h { width: 100%; border: 0; background: none; color: inherit; font: 
 :root[dir="rtl"] details.data summary .chev { margin-left: 0; margin-right: auto; }
 :root[dir="rtl"] .sheet .vars-h small { text-align: right; }
 :root[dir="rtl"] .grading .inner, :root[dir="rtl"] .toast, :root[dir="rtl"] .notice { direction: rtl; }
+
+/* Results sheet: did the attempt reach the instructor */
+.sendbox { padding: var(--s2); flex-wrap: wrap; font-size: 14px; color: inherit; margin-bottom: var(--s2); }
+.sendbox > span:nth-child(2) { flex: 1 1 240px; min-width: 0; }
+#codeHelp { margin-top: 4px; }
+
 </style>
 
 
@@ -668,7 +674,8 @@ button.vars-h { width: 100%; border: 0; background: none; color: inherit; font: 
         <form class="card form" id="startForm" autocomplete="off">
           <h2 data-t="ready"></h2>
           <div class="field"><span class="lab" id="stageLabel" data-t="chooseStage"></span><div class="stagepick" id="stagePick" role="radiogroup" aria-labelledby="stageLabel"></div></div>
-          <div class="field"><label class="lab" for="name" data-t="yourName"></label><input type="text" id="name" maxlength="60" data-tp="namePh"></div>
+          <div class="field" id="nameField"><label class="lab" for="name" data-t="yourName"></label><input type="text" id="name" maxlength="60" data-tp="namePh"></div>
+          <div class="field" id="codeField" hidden><label class="lab" for="code" data-t="yourCode"></label><input type="text" id="code" maxlength="12" dir="ltr" autocapitalize="characters" autocorrect="off" spellcheck="false" data-tp="codePh"><p class="status" id="codeHelp"><span class="dot" id="codeDot"></span><span id="codeText"></span></p></div>
           <div class="field">
             <span class="lab" id="durLabel" data-t="timeLimit"></span>
             <div class="seg" role="radiogroup" aria-labelledby="durLabel">
@@ -2774,6 +2781,7 @@ STAGES.forEach((s) => { if (s.next && s.next.href === undefined) s.next.href = n
 /* This page is week 1: only its own stage. */
 STAGES.splice(0, STAGES.length, ...STAGES.filter((s) => s.id === 's0'));
 const WEEK_NO = 1;
+const RESULTS_URL = "https://script.google.com/macros/s/AKfycbygxtpdkgYqRvHmEuLVK5zo8MdExIIrm7h-RE6bgzZTNYs3XQFZkAD0tHbeLevh_w_f/exec";
 
 
 /* ---------- Words on the page: English and Arabic. SQL terms stay in English in both. ---------- */
@@ -2787,6 +2795,10 @@ const T = {
     durNone: 'No countdown. Press Submit when you finish.', durTimed: 'Submitted automatically when the {v}-minute clock reaches 00:00. Suggested for this stage: {s}.',
     engLoading: 'Loading the SQL engine…', engOk: 'SQL Server practice engine ready. It runs in your browser.', engErr: 'The SQL engine did not load. Check your connection and reload the page.',
     needName: 'Enter your name so your result can be matched to you.',
+    yourCode: 'Your personal code', codePh: 'e.g. K7M2QP', codeHelp: 'The code your instructor gave you. Your result reaches them under your name.', needCode: 'Enter the personal code your instructor gave you.',
+    codeChecking: 'Checking your code…', codeOk: 'Welcome, {name}.', codeBad: 'This code is not on the list. Check it with your instructor.', codeNet: "Couldn't reach Google Sheets to check your code. Check your connection and try again.",
+    sending: 'Sending your result to your instructor…', sentOk: 'Your result reached your instructor.', retry: 'Try again',
+    sendFail: "Your result hasn't reached your instructor yet. It is saved on this device and is sent again the next time you open this page.",
     resumeTitle: 'Unfinished {stage} for {name}', unnamed: 'unnamed trainee', resumeNoLimit: 'No time limit. Pick up where you stopped.', resumeLeft: '{t} left on the clock.', resumeOut: 'Time ran out. Resume to submit what you wrote.',
     step1: '1 · Read', step1t: 'Open a card from the board. The task, the sample data and the expected result are on the left. Table and column names are ready to click or drag into your query.',
     step2: '2 · Run', step2t: "Run shows your query's result on the sample data, with SQL Server's own error messages when something is wrong. It does not grade anything, so run as often as you like.",
@@ -2849,6 +2861,10 @@ const T = {
     durNone: 'مفيش عداد. دوس سلم لما تخلص.', durTimed: 'بيتسلم لوحده لما عداد الـ {v} دقيقة يوصل 00:00. المقترح للمرحلة دي: {s}.',
     engLoading: 'بيحمل محرك الـ SQL…', engOk: 'محرك SQL Server جاهز، وبيشتغل جوه الـ browser بتاعك.', engErr: 'محرك الـ SQL ماتحملش. اتاكد من النت واعمل reload للصفحة.',
     needName: 'اكتب اسمك عشان النتيجة تتنسب ليك.',
+    yourCode: 'الكود بتاعك', codePh: 'مثلا K7M2QP', codeHelp: 'الكود اللي المدرب اداهولك. نتيجتك بتوصله باسمك.', needCode: 'اكتب الكود اللي المدرب اداهولك.',
+    codeChecking: 'بيتاكد من الكود…', codeOk: 'اهلا يا {name}.', codeBad: 'الكود ده مش في الليستة. راجعه مع المدرب.', codeNet: 'مقدرناش نوصل لـ Google Sheets عشان نتاكد من الكود. اتاكد من النت وجرب تاني.',
+    sending: 'بيبعت نتيجتك للمدرب…', sentOk: 'نتيجتك وصلت للمدرب.', retry: 'جرب تاني',
+    sendFail: 'نتيجتك لسه موصلتش للمدرب. هي متسجلة على الجهاز ده وهتتبعت تاني اول ما تفتح الصفحة دي.',
     resumeTitle: '{stage} مخلصش لـ {name}', unnamed: 'متدرب من غير اسم', resumeNoLimit: 'من غير وقت. كمل من مكان ما وقفت.', resumeLeft: 'فاضل {t} على العداد.', resumeOut: 'الوقت خلص. كمل عشان تسلم اللي كتبته.',
     step1: '1 · اقرا', step1t: 'افتح كارت من البورد. المطلوب والـ sample data والنتيجة المتوقعة على جنب. واسامي الجداول والاعمدة جاهزة تدوس عليها او تسحبها جوه الـ query.',
     step2: '2 · شغل', step2t: 'شغل بيعرضلك نتيجة الـ query على الـ sample data، وبرسايل الـ error بتاعة SQL Server نفسها لو فيه غلطة. ده مش بيصحح حاجة، فشغل براحتك.',
@@ -2960,6 +2976,96 @@ const fmt = (sec) => { sec = Math.max(0, Math.round(sec)); return String(Math.fl
 const num = (n) => (Math.round(n * 10) / 10).toString();
 const icon = (id) => `<svg class="i"><use href="#${id}"/></svg>`;
 const KEY = (id = STAGE.id) => 'occ-sqltrack:' + id;
+
+/* ---------- Personal code and the results sheet (weekly pages only) ----------
+   RESULTS_URL is the Apps Script web app; without it the page asks for a name and nothing is sent anywhere. */
+const SHEET = typeof RESULTS_URL !== 'undefined' ? RESULTS_URL : '';
+const CODE_KEY = 'occ-sqltrack:code', PENDING_KEY = 'occ-sqltrack:pending';
+const cleanCode = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
+let codeOk = null, codeState = 'idle', codeSeq = 0, codeTimer = 0;
+/* Apps Script sometimes takes many seconds to wake up: give up after ms instead of waiting forever. */
+async function fetchJson(url, opts, ms) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+  try { return await (await fetch(url, { ...opts, signal: ctl.signal })).json(); } finally { clearTimeout(timer); }
+}
+function paintCode() {
+  if (!SHEET) return;
+  $('#codeDot').className = 'dot ' + (codeState === 'ok' ? 'ok' : codeState === 'bad' || codeState === 'net' ? 'err' : '');
+  $('#codeDot').hidden = codeState === 'idle';
+  // <bdi> keeps a Latin name and the full stop in the right order inside Arabic text.
+  $('#codeText').innerHTML = codeState === 'ok' ? t('codeOk', { name: `<bdi>${esc(codeOk.name)}</bdi>` }) : t({ idle: 'codeHelp', checking: 'codeChecking', bad: 'codeBad', net: 'codeNet' }[codeState]);
+}
+/* Asks the sheet whether the code is on the list. Only the latest check counts if the student keeps typing. */
+async function verifyCode() {
+  const code = cleanCode($('#code').value), seq = ++codeSeq;
+  clearTimeout(codeTimer); codeOk = null;
+  if (!code) { codeState = 'idle'; paintCode(); return false; }
+  codeState = 'checking'; paintCode();
+  let res;
+  try { res = await fetchJson(SHEET + '?action=check&code=' + encodeURIComponent(code), {}, 15000); } catch (e) { res = { net: true }; }
+  if (seq !== codeSeq) return false;
+  if (res.ok) { codeOk = { code, name: res.name }; try { localStorage.setItem(CODE_KEY, code); } catch (e) {} }
+  codeState = res.ok ? 'ok' : res.net ? 'net' : 'bad';
+  paintCode();
+  return !!res.ok;
+}
+function initCode() {
+  $('#nameField').hidden = true; $('#codeField').hidden = false;
+  $('#code').addEventListener('input', () => {
+    codeOk = null; codeSeq++; codeState = 'idle'; paintCode(); clearTimeout(codeTimer);
+    if (cleanCode($('#code').value).length >= 6) codeTimer = setTimeout(verifyCode, 600);
+  });
+  let saved = '';
+  try { saved = localStorage.getItem(CODE_KEY) || ''; } catch (e) {}
+  if (saved) { $('#code').value = saved; verifyCode(); } else paintCode();
+  flushPending();
+}
+/* What the sheet stores for one submitted attempt (in English, whatever the page language). */
+function resultPayload() {
+  const total = QUESTIONS.reduce((a, q, i) => a + earned(i), 0);
+  const title = (o) => (typeof o === 'string' ? o : o.en);
+  return {
+    code: S.code, week: typeof WEEK_NO !== 'undefined' ? WEEK_NO : null,
+    stage: (STAGE.capstone ? '' : 'Stage ' + STAGE.no + ' · ') + title(STAGE.title),
+    score: Math.round(total * 10) / 10, max: maxPts(),
+    testsPassed: S.final.reduce((a, f) => a + f.passed, 0), testsTotal: S.final.reduce((a, f) => a + f.total, 0),
+    hints: S.hintCost.filter(Boolean).length, solutions: S.solCost.filter(Boolean).length,
+    minutes: Math.round(S.timeUsed / 6) / 10, auto: S.auto, lang: LANG,
+    challenges: QUESTIONS.map((q, i) => ({ id: q.id, title: q.title, passed: S.final[i].passed, total: S.final[i].total, points: Math.round(earned(i) * 10) / 10, max: q.points,
+      hint: !!S.hintCost[i], solution: !!S.solCost[i], rule: !!S.final[i].rule })),
+    queries: QUESTIONS.map((q, i) => ({ id: q.id, sql: written(S.final[i].code, q) ? S.final[i].code : '' })),
+    attemptId: S.attemptId
+  };
+}
+function pendingGet() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch (e) { return []; } }
+function pendingSet(list) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); } catch (e) {} }
+const unpend = (id) => pendingSet(pendingGet().filter((x) => x.attemptId !== id));
+/* Keeps the attempt on this device until the sheet confirms it: 'ok', 'bad' (code no longer on the list) or 'fail'. */
+async function sendResult(p) {
+  pendingSet(pendingGet().filter((x) => x.attemptId !== p.attemptId).concat(p));
+  try {
+    // text/plain keeps it a simple request, so the browser sends it straight to Apps Script with no CORS preflight.
+    // A send that timed out may still have arrived; the sheet ignores a second copy of the same attempt id.
+    const r = await fetchJson(SHEET, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) }, 30000);
+    if (r.ok) { unpend(p.attemptId); return 'ok'; }
+    if (r.error === 'unknown code') { unpend(p.attemptId); return 'bad'; }
+    return 'fail';
+  } catch (e) { return 'fail'; }
+}
+async function flushPending() { for (const p of pendingGet()) await sendResult(p); }
+function paintSend() {
+  const box = $('#sendBox');
+  if (!box) return;
+  const st = S.send;
+  box.innerHTML = `<span class="dot ${st === 'ok' ? 'ok' : st === 'sending' ? '' : 'err'}"></span><span>${esc(t({ ok: 'sentOk', sending: 'sending', bad: 'codeBad', fail: 'sendFail' }[st]))}</span>`
+    + (st === 'fail' ? `<button class="btn" type="button" id="retryBtn">${t('retry')}</button>` : '');
+  if (st === 'fail') $('#retryBtn').onclick = deliver;
+}
+async function deliver() {
+  if (!SHEET || !S.payload) return;
+  S.send = 'sending'; paintSend();
+  S.send = await sendResult(S.payload); paintSend();
+}
 const TYPE_OF = {};
 Object.entries(SCHEMA).forEach(([tb, cols]) => cols.forEach(([c, ty]) => { TYPE_OF[tb + '.' + c] = ty; }));
 const TABLE_NOTES_AR = {
@@ -3019,7 +3125,7 @@ function storeSave() {
   if (S.screen !== 'board') return;
   try {
     localStorage.setItem(KEY(), JSON.stringify({
-      name: S.name, duration: S.duration, startAt: S.startAt, endAt: S.endAt, current: S.current,
+      name: S.name, code: S.code, attemptId: S.attemptId, duration: S.duration, startAt: S.startAt, endAt: S.endAt, current: S.current,
       codes: S.codes, runs: S.runs, hintSeen: S.hintSeen, solSeen: S.solSeen, hintCost: S.hintCost, solCost: S.solCost
     }));
   } catch (e) {}
@@ -3282,7 +3388,7 @@ function renderStartTexts() {
   $('#heroLede').textContent = L(STAGE.blurb);
   $('#statCount').textContent = QUESTIONS.length;
   $('#trackRow').innerHTML = TRACK.map((x, k) => { const ready = STAGES.some((s) => s.no === k); return `<span class="${STAGE.no === k ? 'on' : ''}"><i>${k}</i>${esc(L(x))}${ready ? '' : ` · ${esc(t('comingSoon'))}`}</span>`; }).join('');
-  updateDur(); paintEngine(); paintResume();
+  updateDur(); paintEngine(); paintResume(); paintCode();
 }
 function paintResume() {
   const saved = storeGet(STAGE.id);
@@ -3299,6 +3405,7 @@ function initStart() {
   renderStagePick();
   $('#startForm').addEventListener('submit', (e) => { e.preventDefault(); startQuiz(); });
   document.querySelectorAll('input[name="dur"]').forEach((r) => r.addEventListener('change', updateDur));
+  if (SHEET) initCode();
   pickDefaultTime(); renderStartTexts();
   checkEngine();
 }
@@ -3325,15 +3432,26 @@ async function checkEngine() {
   paintEngine();
   if (ok && S.open) renderPanel();
 }
-function startQuiz() {
-  const name = $('#name').value.trim();
-  if (!name) { $('#startErr').textContent = t('needName'); $('#name').focus(); return; }
-  if (!engineOK()) return;
+let starting = false;
+async function startQuiz() {
+  if (starting || !engineOK()) return;
+  let name = $('#name').value.trim(), code = '';
+  if (SHEET) {
+    if (!cleanCode($('#code').value)) { $('#startErr').textContent = t('needCode'); $('#code').focus(); return; }
+    $('#startErr').textContent = '';
+    if (!codeOk) {
+      starting = true; $('#startBtn').disabled = true;
+      const ok = await verifyCode();
+      starting = false; paintEngine();
+      if (!ok) { $('#code').focus(); return; }
+    }
+    ({ name, code } = codeOk);
+  } else if (!name) { $('#startErr').textContent = t('needName'); $('#name').focus(); return; }
   $('#startErr').textContent = '';
   setStage(selectedStageId());
   const dur = selectedMinutes() * 60;
   Object.assign(S, freshState(), {
-    name, duration: dur, startAt: Date.now(), endAt: dur ? Date.now() + dur * 1000 : 0, current: 0,
+    name, code, attemptId: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), duration: dur, startAt: Date.now(), endAt: dur ? Date.now() + dur * 1000 : 0, current: 0,
     final: [], submitted: false, grading: false, auto: false, milestones: { 5: false, 1: false }
   });
   enterQuiz();
@@ -3341,7 +3459,7 @@ function startQuiz() {
 function resume(saved) {
   const base = freshState();
   Object.assign(S, base, {
-    name: saved.name || '', duration: typeof saved.duration === 'number' ? saved.duration : STAGE.minutes * 60,
+    name: saved.name || '', code: saved.code || '', attemptId: saved.attemptId || Date.now().toString(36), duration: typeof saved.duration === 'number' ? saved.duration : STAGE.minutes * 60,
     startAt: saved.startAt || Date.now(), endAt: saved.endAt || 0, current: Math.min(saved.current || 0, QUESTIONS.length - 1),
     codes: saved.codes, runs: saved.runs || base.runs, hintSeen: saved.hintSeen || base.hintSeen, solSeen: saved.solSeen || base.solSeen,
     hintCost: saved.hintCost || base.hintCost, solCost: saved.solCost || base.solCost,
@@ -3701,7 +3819,9 @@ async function submitQuiz(auto) {
   $('#gradeArc').style.strokeDashoffset = '0';
   S.submitted = true; S.grading = false;
   storeClear();
+  S.payload = SHEET && S.code ? resultPayload() : null; S.send = 'sending';
   renderResults();
+  deliver();
 }
 function finalState(i) { const f = S.final[i]; return f.passed === f.total ? 'pass' : f.passed === 0 ? 'fail' : 'partial'; }
 function finalMark(i) {
@@ -3768,6 +3888,7 @@ function renderResults() {
   $('#grading').hidden = true;
   const box = $('#final'); box.hidden = false;
   box.innerHTML = `<div class="res">
+    ${S.payload ? '<div class="card sendbox status" id="sendBox" role="status"></div>' : ''}
     <div class="resgrid">
       <div class="scorecard glow">
         <div class="sc-top"><span class="ico">${icon('i-spark')}</span><div style="min-width:0"><b>${esc(S.name)}</b><p class="muted" style="font-size:12.5px">${esc(stageLabel())} · SQL Server${S.auto ? t('atLimit') : ''}</p></div><span class="muted" style="margin-inline-start:auto;font-size:12.5px;white-space:nowrap">${t('used', { t: fmt(S.timeUsed) })}</span></div>
@@ -3821,6 +3942,7 @@ function renderResults() {
     </div>
   </div>`;
   $('#summary').value = summaryText();
+  paintSend();
   $('#copyBtn').onclick = async () => {
     const ta = $('#summary'), msg = $('#copyMsg');
     try { await navigator.clipboard.writeText(ta.value); msg.textContent = t('copied'); }
