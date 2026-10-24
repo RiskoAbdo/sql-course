@@ -589,6 +589,10 @@ button.vars-h { width: 100%; border: 0; background: none; color: inherit; font: 
 .sendbox > span:nth-child(2) { flex: 1 1 240px; min-width: 0; }
 #codeHelp { margin-top: 4px; }
 
+
+/* the logo is the home link */
+a.home{display:flex;align-items:center;flex:none;border-radius:8px}
+a.home:focus-visible{outline:2px solid var(--amber,#F2A33A);outline-offset:4px}
 </style>
 
 
@@ -614,7 +618,7 @@ button.vars-h { width: 100%; border: 0; background: none; color: inherit; font: 
 
 <header class="band" id="band">
   <div class="band-in wrap gx">
-    <img class="logo" src="assets/occulenz-horizontal-light.svg" alt="Occulenz">
+    <a class="home" id="homeLink" href="../" data-ta="home"><img class="logo" src="assets/occulenz-horizontal-light.svg" alt="Occulenz"></a>
     <span class="vr" id="bandVr" hidden></span>
     <span class="bt" id="bandTitle" hidden><b id="bandStage"></b><span id="who"></span></span>
     <span class="sp"></span>
@@ -2782,7 +2786,7 @@ const T = {
   en: {
     language: 'Language', theme: 'Colour theme', light: 'Light mode', dark: 'Dark mode', submit: 'Submit',
     eyebrow: 'Occulenz · SQL Server practice', heroTitle: '<span class="key">SQL</span> for Data Analysts',
-    factQueries: 'queries', factPoints: 'points', minutes: 'minutes', noLimit: 'no time limit',
+    factQueries: 'queries', factPoints: 'points', minutes: 'minutes', noLimit: 'no time limit', home: 'Home', leaveQuiz: 'Go to the home page? Your answers stay saved on this device, and the clock keeps running.',
     resume: 'Resume', discard: 'Discard', ready: 'Ready when you are', chooseStage: 'Stage', yourName: 'Your name', namePh: 'e.g. Sara Ahmed',
     timeLimit: 'Time limit', min: 'min', noTimer: 'no timer', start: 'Start the quiz',
     durNone: 'No countdown. Press Submit when you finish.', durTimed: 'Submitted automatically when the {v}-minute clock reaches 00:00. Suggested for this stage: {s}.',
@@ -2848,7 +2852,7 @@ const T = {
   ar: {
     language: 'اللغة', theme: 'الوضع الفاتح والغامق', light: 'فاتح', dark: 'غامق', submit: 'سلم',
     eyebrow: 'Occulenz · تدريب SQL Server', heroTitle: 'مسار <span class="key">SQL</span><br>للـ Data Analyst',
-    factQueries: 'تحدي', factPoints: 'نقطة', minutes: 'دقيقة', noLimit: 'من غير وقت',
+    factQueries: 'تحدي', factPoints: 'نقطة', minutes: 'دقيقة', noLimit: 'من غير وقت', home: 'الرئيسية', leaveQuiz: 'تروح للصفحة الرئيسية؟ اجاباتك متسجلة على الجهاز ده، والعداد هيفضل شغال.',
     resume: 'كمل', discard: 'امسحه', ready: 'جاهز؟ يلا بينا', chooseStage: 'المرحلة', yourName: 'اسمك', namePh: 'مثلا سارة احمد',
     timeLimit: 'الوقت', min: 'دقيقة', noTimer: 'من غير وقت', start: 'ابدا الـ quiz',
     durNone: 'مفيش عداد. دوس سلم لما تخلص.', durTimed: 'بيتسلم لوحده لما عداد الـ {v} دقيقة يوصل 00:00. المقترح للمرحلة دي: {s}.',
@@ -4017,6 +4021,7 @@ try { savedLang = localStorage.getItem(LANG_KEY); } catch (e) {}
 LANG = savedLang === 'ar' ? 'ar' : 'en';
 document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
 applyStatic();
+$('#homeLink').addEventListener('click', (e) => { if (S.screen === 'board' && !S.submitted && !confirm(t('leaveQuiz'))) e.preventDefault(); });
 initStart();
 show('start');
 </script>
