@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#002A2C">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="SQL Server practice for data analysts: placement test, 8 stages and a capstone, in English and Arabic.">
+<meta name="description" content="The SQL League by Occulenz: a weekly SQL Server competition in 9 rounds, in English and Arabic.">
 
-<title>SQL for Data Analysts · Week 1</title>
+<title>The SQL League · Round 1</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Poppins:wght@400;500;600&family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
@@ -682,13 +682,6 @@ a.home:focus-visible{outline:2px solid var(--amber,#F2A33A);outline-offset:4px}
           <div class="field" id="codeField" hidden><label class="lab" for="code" data-t="yourCode"></label><input type="text" id="code" maxlength="12" dir="ltr" autocapitalize="characters" autocorrect="off" spellcheck="false" data-tp="codePh"><p class="status" id="codeHelp"><span class="dot" id="codeDot"></span><span id="codeText"></span></p></div>
           <div class="field">
             <span class="lab" id="durLabel" data-t="timeLimit"></span>
-            <div class="seg" role="radiogroup" aria-labelledby="durLabel">
-              <input type="radio" name="dur" id="d30" value="30"><label for="d30"><b>30</b><small data-t="min"></small></label>
-              <input type="radio" name="dur" id="d45" value="45"><label for="d45"><b>45</b><small data-t="min"></small></label>
-              <input type="radio" name="dur" id="d60" value="60" checked><label for="d60"><b>60</b><small data-t="min"></small></label>
-              <input type="radio" name="dur" id="d90" value="90"><label for="d90"><b>90</b><small data-t="min"></small></label>
-              <input type="radio" name="dur" id="d0" value="0"><label for="d0"><b>∞</b><small data-t="noTimer"></small></label>
-            </div>
             <p class="muted" id="durHelp" style="font-size:12.5px"></p>
           </div>
           <div class="errtext" id="startErr" role="alert"></div>
@@ -2620,160 +2613,32 @@ STAGES.push(
 STAGES[1].next = G('Stage 2: filtering with WHERE, AND / OR, IN, BETWEEN, LIKE, and the NULL traps.', 'مرحلة 2: الفلترة بـ WHERE و AND و OR و IN و BETWEEN و LIKE، وفخاخ الـ NULL.');
 STAGES.forEach((s) => { if (s.next && s.next.href === undefined) s.next.href = null; });
 
-/* The free Explain tab teaches the thinking only: no keyword or function that gives the method away
-   (competition rule, Oct 2026). Only the changed fields are listed; the rest stay as written in the stage file. */
-const EXPLAIN_FIX = {
-  's1:pick': {
-    en: { steps: ["List the three columns the task names, in the order it names them.", "Say which table they live in.", "Sort the rows by product name, A to Z."] },
-    ar: { steps: ["اكتب التلات اعمدة اللي المطلوب بيسميهم، بنفس الترتيب.", "قول هما موجودين في انهي جدول.", "رتب الصفوف على اسم المنتج من A لـ Z."] },
-  },
-  's1:rename': {
-    en: { steps: ["Pick the three columns.", "Each one needs a new header: the exact name the report asks for.", "A header with a space or a bracket in it has to be wrapped, so SQL reads it as one name and not as separate words.", "Sort by the product name."],
-      example: "The price column keeps its values; only its header changes, from unit_price to Price (EGP)." },
-    ar: { steps: ["اختار التلات اعمدة.", "كل عمود محتاج header جديد: الاسم بالظبط اللي التقرير طالبه.", "الاسم اللي فيه مسافة او قوس لازم يتلف، عشان SQL تقراه اسم واحد مش كلمات منفصلة.", "رتب على اسم المنتج."],
-      example: "عمود السعر قيمه زي ما هي؛ اللي بيتغير الـ header بس، من unit_price لـ Price (EGP)." },
-  },
-  's1:boxes': {
-    en: { example: "Laptop Stand has 60 in stock: that fills exactly 5 boxes of 12, with nothing left. Mechanical Keyboard has 40: 3 full boxes take 36, so 4 are left over." },
-    ar: { example: "Laptop Stand عنده 60: بيملا 5 كراتين من 12 بالظبط ومفيش حاجة فاضلة. و Mechanical Keyboard عنده 40: 3 كراتين كاملة بياخدوا 36، فبيفضل 4." },
-  },
-  's1:fixvat': {
-    en: { steps: ["Run it and read the headers. Only two columns come back, and one carries the wrong name. Look at what sits between category and the column before it.", "Check the maths on one row: 14 / 100 of the price is only the VAT itself, not the price a customer pays with VAT.", "Look at the first row: is it the cheapest product or the most expensive? The task wants the most expensive first.", "Two products at the same price: what decides which comes first? The task says A to Z by name."] },
-    ar: { steps: ["شغلها واقرا اسامي الاعمدة. هيرجع عمودين بس، وواحد منهم اسمه غلط. بص على اللي بين category والعمود اللي قبلها.", "راجع الحساب على صف واحد: 14 / 100 من السعر دي الضريبة لوحدها، مش السعر اللي العميل بيدفعه بالضريبة.", "بص على اول صف: ده ارخص منتج ولا اغلى منتج؟ المطلوب الاغلى الاول.", "منتجين بنفس السعر: مين بيحدد انهي يجي الاول؟ المطلوب من A لـ Z على الاسم."] },
-  },
-  's2:fixfilter': {
-    en: { steps: ["Run it. Msg 207 says \"Cairo\" is not a column: SQL Server read the text in double quotes as a column name. Text values need the other kind of quote.", "Read the city condition the way SQL does: AND binds tighter than OR, so the Gmail and referral checks only apply to Giza. The two cities must act as one unit.", "The email pattern has no wildcard, so it only matches an email that is exactly gmail.com. The pattern must allow any text before @gmail.com.", "Comparing with NULL using = is never true, because NULL means unknown. A missing value needs its own kind of test."] },
-    ar: { steps: ["شغلها. الـ Msg 207 بتقول ان \"Cairo\" مش عمود: SQL Server قرت النص اللي بين " + '"' + " كاسم عمود. النص محتاج النوع التاني من العلامات.", "اقرا شرط المدينة زي ما SQL بتقراه: الـ AND بتتربط قبل الـ OR، فشرط الـ Gmail والـ referral بيتطبق على Giza بس. المدينتين لازم يبقوا وحدة واحدة.", "شكل الـ email مفيهوش wildcard، فبيمسك بس email هو gmail.com بالظبط. الشكل لازم يسمح باي نص قبل @gmail.com.", "المقارنة بـ NULL بعلامة = عمرها ما بتبقى صح، لان NULL معناها مش معروف. القيمة الناقصة ليها اختبار مخصوص."] },
-  },
-  's3:emaildomain': {
-    en: { steps: ["Find the position of the @.", "The domain starts one character after it.", "Take everything from there to the end. If you need a length, the length of the whole email is always enough."] },
-    ar: { steps: ["دور الـ @ في انهي مكان.", "الـ domain بيبدا بعدها بحرف واحد.", "خد كل حاجة من هناك لحد الاخر. ولو محتاج طول، طول الـ email كله دايما كفاية."] },
-  },
-  's3:monthbounds': {
-    en: { steps: ["The first day: keep the order's year and month, and set the day to 1.", "The last day depends on the month: 28, 29, 30 or 31. Let SQL Server work it out from the date instead of guessing it."] },
-    ar: { steps: ["اول يوم: سيب سنة الـ order وشهره زي ما هما، وخلي اليوم 1.", "اخر يوم بيفرق حسب الشهر: 28 او 29 او 30 او 31. خلي SQL Server تحسبه من التاريخ بدل ما تخمنه."] },
-  },
-  's3:nullslast': {
-    en: { example: "Sample data: sorting by city alone puts Karim Mostafa (no city) first, because a missing value sorts before any text. The task wants him last, after Mansoura, the last city A to Z." },
-    ar: { example: "في الـ sample data: الترتيب على المدينة لوحدها بيحط كريم مصطفى (مالوش مدينة) الاول، لان القيمة الناقصة بتترتب قبل اي نص. والمطلوب يبقى في الاخر، بعد Mansoura اللي هي اخر مدينة من A لـ Z." },
-  },
-  's3:firstname': {
-    en: { example: "Mona Hassan: the space is at position 5, so the first name is the first 4 characters: Mona." },
-    ar: { example: "Mona Hassan: المسافة في المكان 5، فالاسم الاول هو اول 4 حروف: Mona." },
-  },
-  's3:fullyears': {
-    en: { given: "The <code>customers</code> table. Today is 2025-06-30.",
-      steps: ["Count how many times the calendar year changed between the sign-up and today.", "Move the sign-up date forward by that many years.", "If that anniversary is still in the future, the last year is not complete yet: take 1 off."],
-      example: "Youssef signed up on 2023-09-21. The year changed twice (into 2024 and 2025), but his second anniversary is in September 2025, so full_years is 1." },
-    ar: { given: "جدول <code>customers</code>. والنهارده 2025-06-30.",
-      steps: ["عد السنة اتغيرت كام مرة بين الاشتراك والنهارده.", "زود تاريخ الاشتراك بعدد السنين ده.", "لو الذكرى دي لسه في المستقبل، يبقى اخر سنة لسه مكملتش: اطرح 1."],
-      example: "يوسف اشترك يوم 2023-09-21. السنة اتغيرت مرتين (لـ 2024 ولـ 2025)، بس الذكرى التانية بتاعته في سبتمبر 2025، فالـ full_years بتاعه 1." },
-  },
-  's3:fixfunc': {
-    en: { steps: ["order_month shows 2024-00. In a format string small and capital letters mean different things: one of them is minutes, not the month.", "discount_pct is NULL for orders with no discount. Maths on a missing value gives a missing value, and the task wants 0 there.", "\"5 units or more\" includes 5. Check what the query calls an order of exactly 5 units.", "The sort is on the wrong column. It looks right on the sample data, but hidden data is not stored by date."] },
-    ar: { steps: ["الـ order_month بيطلع 2024-00. في شكل التاريخ الحروف الصغيرة والكبيرة معناها مختلف: واحدة منهم دقايق مش الشهر.", "الـ discount_pct بيطلع NULL للـ orders اللي مفيهاش خصم. اي حساب على قيمة ناقصة بيطلع ناقص، والمطلوب 0 هناك.", "\"5 وحدات او اكتر\" يعني الـ 5 داخلة. شوف الـ query بتسمي الـ order اللي فيه 5 بالظبط ايه.", "الترتيب على العمود الغلط. شكله صح في الـ sample data، بس الـ hidden data مش متخزنة بترتيب التاريخ."] },
-  },
-  's4:avgqty': {
-    en: { example: "Sample data: the 10 delivered orders have 37 units, so the average is 3.7. In SQL Server the average of whole numbers is a whole number, 3, so the units must become decimals before you average them." },
-    ar: { example: "في الـ sample data: الـ 10 orders اللي اتسلموا فيهم 37 وحدة، فالمتوسط 3.7. في SQL Server متوسط الارقام الصحيحة بيطلع رقم صحيح، 3، فلازم الوحدات تبقى decimal قبل ما تجيب المتوسط." },
-  },
-  's4:avgvalue': {
-    en: { example: "Sample data: the delivered orders average 2382.7. Leave a missing discount missing and only the 4 discounted delivered orders get a value, so the average jumps to 3944.25." },
-    ar: { example: "في الـ sample data: متوسط الـ orders اللي اتسلمت 2382.7. لو سبت الخصم الناقص ناقص، يبقى الـ 4 بس اللي فيهم خصم هيبقى ليهم قيمة، والمتوسط هيقفز لـ 3944.25." },
-  },
-  's4:sizebands': {
-    en: { steps: ["Give each order its band from its quantity.", "Group by that same band.", "Count the orders and add up the units.", "Sort the bands from small to big. A to Z would put Few first, so the order has to come from the size, not from the name."] },
-    ar: { steps: ["ادي كل order الفئة بتاعته من الـ quantity.", "جمع على نفس الفئة دي.", "عد الـ orders واجمع الوحدات.", "رتب الفئات من الصغيرة للكبيرة. الترتيب من A لـ Z هيحط Few الاول، فالترتيب لازم يجي من الحجم مش من الاسم."] },
-  },
-  's4:fixgroup': {
-    en: { steps: ["Msg 147: a condition on how many orders a group has can't be checked before the groups exist. It belongs in the part of the query that filters groups.", "Msg 207: order_year is a name given in the SELECT, which runs after the grouping, so the grouping can't see it. Group by the expression itself.", "The count skips the orders without a discount, but the task counts every order.", "avg_quantity comes out whole: the average of whole numbers is a whole number. Turn the units into decimals first, then round to 2."] },
-    ar: { steps: ["Msg 147: الشرط على عدد الـ orders في المجموعة مينفعش يتشيك قبل ما المجموعات تتعمل. مكانه الجزء اللي بيفلتر المجموعات في الـ query.", "Msg 207: الـ order_year اسم اتعمل في الـ SELECT، والـ SELECT بتشتغل بعد التجميع، فالتجميع مش شايفه. جمع على الحسبة نفسها.", "العد بيعدي الـ orders اللي مفيهاش خصم، والمطلوب يعد كل الـ orders.", "الـ avg_quantity بيطلع رقم صحيح: متوسط الارقام الصحيحة رقم صحيح. حول الوحدات لـ decimal الاول، وبعدين قرب لرقمين."] },
-  },
-  's5:guestorders': {
-    en: { steps: ["Start from orders, because every order must stay.", "Bring in the customer of each order.", "An order with no customer must still be in the result, with NULL as the name: combine the tables in a way that keeps rows with no match."],
-      example: "The sample data has no guest orders, so a combine that drops unmatched rows looks right there. Hidden data has guests, and that kind of combine loses them." },
-    ar: { steps: ["ابدا من orders، لان كل order لازم يفضل.", "هات العميل بتاع كل order.", "الـ order اللي مالوش عميل لازم يفضل في النتيجة، والاسم NULL: اربط الجدولين بطريقة بتسيب الصفوف اللي ملهاش مقابل."],
-      example: "الـ sample data مفيهاش guests، فالربط اللي بيرمي الصفوف اللي ملهاش مقابل بيبان صح هناك. والـ hidden data فيها guests، والنوع ده من الربط بيضيعهم." },
-  },
-  's5:selfjoin': {
-    en: { steps: ["Read the table twice: once as the customer, once as the referrer.", "Match the referrer's id to the customer's referred_by.", "Customers with no referrer must stay, with NULL as the referrer's name."] },
-    ar: { steps: ["اقرا الجدول مرتين: مرة كعميل، ومرة كاللي جابه.", "طابق الـ id بتاع اللي جابه مع الـ referred_by بتاع العميل.", "العملا اللي محدش جابهم لازم يفضلوا، واسم اللي جابهم NULL."] },
-  },
-  's5:custsummary': {
-    en: { steps: ["Start from customers and attach their orders, keeping customers who have none.", "Group by the customer (id and name).", "Count the orders, not the rows: a customer with no orders still has one row.", "Sort."] },
-    ar: { steps: ["ابدا من customers ولزق الـ orders بتاعتهم، وسيب العملا اللي مالهمش.", "جمع على العميل (الـ id والاسم).", "عد الـ orders مش الصفوف: العميل اللي مالوش orders ليه برضه صف واحد.", "رتب."] },
-  },
-  's5:referralcount': {
-    en: { steps: ["Start from every customer as a possible referrer.", "Attach the customers whose referred_by points to them, keeping referrers who brought nobody.", "Group by the referrer and count only real matches, so a referrer with none shows 0."] },
-    ar: { steps: ["ابدا من كل عميل كانه ممكن يكون جاب حد.", "لزق العملا اللي الـ referred_by بتاعهم بيشاور عليه، وسيب اللي مجابش حد.", "جمع على اللي جاب وعد المطابقين الحقيقيين بس، عشان اللي مجابش حد يطلع 0."] },
-  },
-  's5:catcustomers': {
-    en: { steps: ["Start from products, so every category stays.", "Attach only the delivered orders, keeping categories with none. If you filter for delivered after combining, the categories with no delivered order disappear.", "Group by category.", "Count the different customers; guests (NULL) are not counted."] },
-    ar: { steps: ["ابدا من products، عشان كل category تفضل.", "لزق الـ orders اللي اتسلمت بس، وسيب الـ categories اللي مالهاش. لو فلترت على اللي اتسلم بعد الربط، الـ categories اللي مالهاش ولا order اتسلم هتختفي.", "جمع على الـ category.", "عد العملا المختلفين، والـ guests (NULL) مش بيتعدوا."] },
-  },
-  's5:unsold2025': {
-    en: { steps: ["Start from products.", "Attach only the orders from 2025, keeping every product even when nothing matches.", "Keep the products where nothing matched: their order columns are empty (NULL).", "Sort."] },
-    ar: { steps: ["ابدا من products.", "لزق orders 2025 بس، وسيب كل منتج حتى لو مفيش حاجة اتطابقت معاه.", "سيب المنتجات اللي مفيش حاجة اتطابقت معاها: اعمدة الـ order عندها فاضية (NULL).", "رتب."] },
-  },
-  's5:fanout': {
-    en: { steps: ["Attach every product's orders, keeping products with none.", "Group by category.", "Count each product once.", "Count the orders."],
-      example: "Sample data: Accessories has 5 products and 10 orders. After combining there is one row per order, so counting the product column row by row says 10 products. Each product must count once." },
-    ar: { steps: ["لزق الـ orders بتاعة كل منتج، وسيب المنتجات اللي مالهاش.", "جمع على الـ category.", "عد كل منتج مرة.", "عد الـ orders."],
-      example: "في الـ sample data: Accessories فيها 5 منتجات و 10 orders. بعد الربط فيه صف لكل order، فعد عمود المنتج صف صف بيقول 10 منتجات. وكل منتج لازم يتعد مرة واحدة." },
-  },
-  's5:fixjoin': {
-    en: { steps: ["Look at what the matching condition compares: the order's customer_id with the customer's referred_by. That ties each customer to their referrer's orders.", "The delivered filter runs after the tables are combined, so customers with no delivered order are thrown away. It must be part of the matching, so they stay with 0.", "Counting rows gives 1 to a customer with no match, because they still have one row. Count something that is NULL when there is no order.", "Grouping by the name merges two people who share a name. Group by something unique to each person as well."] },
-    ar: { steps: ["بص شرط الربط بيقارن ايه: الـ customer_id بتاع الـ order مع الـ referred_by بتاع العميل. ده بيربط كل عميل بـ orders اللي جابه.", "فلتر الـ Delivered بيشتغل بعد ربط الجدولين، فالعملا اللي مالهمش ولا order اتسلم بيترموا. لازم يبقى جزء من الربط نفسه، عشان يفضلوا بـ 0.", "عد الصفوف بيدي 1 للعميل اللي مالوش مقابل، لان ليه صف واحد برضه. عد حاجة بتبقى NULL لما مفيش order.", "التجميع على الاسم بيدمج شخصين ليهم نفس الاسم. جمع كمان على حاجة مميزة لكل شخص."] },
-  },
-  's6:unionall': {
-    en: { steps: ["One list of the sign-ups: the customer, the word signup and the date.", "One list of the orders, guests left out, in the same columns.", "Put the second list under the first and keep every row, even two that look the same. The headers come from the first list.", "Sort the whole list once, at the end."] },
-    ar: { steps: ["قايمة للاشتراكات: العميل وكلمة signup والتاريخ.", "قايمة للـ orders، من غير الـ guests، بنفس الاعمدة.", "حط القايمة التانية تحت الاولى وسيب كل الصفوف، حتى لو اتنين شبه بعض. واسامي الاعمدة بتيجي من القايمة الاولى.", "رتب القايمة كلها مرة واحدة في الاخر."] },
-  },
-  's6:avgofcounts': {
-    en: { example: "Sample data: 6 customers placed 14 orders, so 14 / 6 = 2.33. The counts are whole numbers, and the average of whole numbers comes out as 2, so make them decimals first." },
-    ar: { example: "في الـ sample data: 6 عملا عملوا 14 order، يعني 14 / 6 = 2.33. الاعداد ارقام صحيحة، ومتوسط الارقام الصحيحة بيطلع 2، فحولها لـ decimal الاول." },
-  },
-  's6:notinnull': {
-    en: { example: "Sample data: Karim and Omar. Comparing each customer with a list of ids breaks when the list has a NULL in it (a guest order): then nobody passes. The sample has no guest orders, so that looks fine here, but not on hidden data." },
-    ar: { example: "في الـ sample data: كريم وعمر. مقارنة كل عميل بقايمة ids بتبوظ لو القايمة فيها NULL (order من guest): ساعتها محدش بيعدي. والـ sample data مفيهاش guests، فبتبان صح هنا، بس مش في الـ hidden data." },
-  },
-  's6:fixsub': {
-    en: { steps: ["Msg 1033: the named first step sorts its rows, and a named step can't do that. Only the final result is sorted.", "Msg 512: = expects one value, but more than one customer can have 5 units. The comparison must accept a list.", "The units are counted from every order, but the task wants delivered orders only.", "A cancelled guest order puts NULL in the list of ids to exclude, and then nobody passes the \"not in the list\" test. Check, for each customer, whether a cancelled order of theirs exists instead."] },
-    ar: { steps: ["Msg 1033: الخطوة الاولى اللي ليها اسم بترتب صفوفها، والخطوة اللي ليها اسم مينفعش تعمل كده. النتيجة النهائية بس هي اللي بتترتب.", "Msg 512: الـ = مستنية قيمة واحدة، بس ممكن اكتر من عميل يبقى عنده 5 وحدات. المقارنة لازم تقبل قايمة.", "الوحدات بتتعد من كل الـ orders، والمطلوب الـ orders اللي اتسلمت بس.", "order اتلغى من guest بيحط NULL في قايمة الـ ids اللي هتتشال، وساعتها محدش بيعدي اختبار \"مش في القايمة\". بدل كده، شوف لكل عميل هل فيه order ليه اتلغى."] },
-  },
-  's7:rankdense': {
-    en: { steps: ["Order the products by price, highest first.", "First column: tied prices share a number, and the next price skips the numbers they took.", "Second column: tied prices share a number, and the next price takes the very next number, with no gap.", "Compare the two columns where prices tie."],
-      example: "Sample data: the two products at 1450 are both 3. USB-C Hub comes next: 5 in the first column (3 and 4 are taken), 4 in the second." },
-    ar: { steps: ["رتب المنتجات على السعر من الاعلى.", "العمود الاول: الاسعار المتعادلة بتاخد نفس الرقم، والسعر اللي بعدها بيفوت الارقام اللي اخدوها.", "العمود التاني: الاسعار المتعادلة بتاخد نفس الرقم، والسعر اللي بعدها بياخد الرقم اللي بعده على طول، من غير فجوة.", "قارن العمودين مكان ما الاسعار متعادلة."],
-      example: "في الـ sample data: المنتجين اللي بـ 1450 الاتنين رقم 3. و USB-C Hub بعدهم: 5 في العمود الاول (3 و 4 اتاخدوا)، و 4 في التاني." },
-  },
-  's7:share': {
-    en: { steps: ["Group by status and count.", "Add up all the group counts while keeping one row per group, so every row can see the total.", "Divide, as a decimal, times 100, and round."] },
-    ar: { steps: ["جمع على الـ status وعد.", "اجمع اعداد كل المجموعات وانت سايب صف لكل مجموعة، عشان كل صف يشوف المجموع.", "اقسم كـ decimal واضرب في 100 وقرب."] },
-  },
-  's7:firstorder': {
-    en: { steps: ["Number each customer's orders from the earliest; on the same day, the smaller order_id first.", "Keep number 1.", "The numbers are made after the filter runs, so you can't filter on them in the same step: number first, then filter the numbered rows."] },
-    ar: { steps: ["رقم orders كل عميل من الاقدم؛ ولو في نفس اليوم، الـ order_id الاصغر الاول.", "سيب رقم 1.", "الارقام بتتعمل بعد ما الفلتر يشتغل، فمينفعش تفلتر عليها في نفس الخطوة: رقم الاول، وبعدين فلتر الصفوف المترقمة."] },
-  },
-  's7:fixwindow': {
-    en: { steps: ["Msg 207: the filter runs before the SELECT, so it can't see order_no, which is made there. Number the rows in one step, then filter in the next.", "running_units adds up across every customer. It must start again for each customer.", "order_no gives two same-day orders the same number, but the task wants a different number for every order, with order_id breaking the tie.", "The running total also needs order_id in its order, or same-day orders share one total."] },
-    ar: { steps: ["Msg 207: الفلتر بيشتغل قبل الـ SELECT، فمش شايف الـ order_no اللي بيتعمل هناك. رقم الصفوف في خطوة، وفلتر في الخطوة اللي بعدها.", "الـ running_units بيجمع على كل العملا. لازم يبدا من الاول لكل عميل.", "الـ order_no بيدي orderين في نفس اليوم نفس الرقم، والمطلوب رقم مختلف لكل order، والـ order_id هو اللي يفك التعادل.", "المجموع التراكمي كمان محتاج order_id في ترتيبه، والا orders نفس اليوم هتاخد مجموع واحد."] },
-  },
-  's8:missingmonths': {
-    en: { steps: ["A month with no delivered order has no row in orders, so it can't come from orders alone. Build the 12 month starts of 2024 yourself first.", "Work out the revenue per month start.", "Attach the revenue to that calendar, keeping every month, with 0 for the empty ones.", "Compare each month with the row before it."] },
-    ar: { steps: ["الشهر اللي مفيهوش ولا order اتسلم مالوش صف في orders، فمش هيطلع من orders لوحدها. اعمل انت الاول قايمة باول يوم في كل شهر من الـ 12 في 2024.", "احسب الايراد لكل اول شهر.", "لزق الايراد على القايمة دي، وسيب كل الشهور، و 0 للفاضية.", "قارن كل شهر بالصف اللي قبله."] },
-  },
-  's9:catshare': {
-    en: { steps: ["Start from products, so every category is there.", "Attach the delivered orders and add up the net value per category.", "Share: every row needs the grand total next to it. Rank: equal revenue shares a number, and the next one takes the very next number."] },
-    ar: { steps: ["ابدا من products، عشان كل category تبقى موجودة.", "لزق الـ orders اللي اتسلمت واجمع صافي القيمة لكل category.", "النصيب: كل صف محتاج المجموع الكلي جنبه. الترتيب: الايراد المتساوي بياخد نفس الرقم، واللي بعده بياخد الرقم اللي بعده على طول."] },
-  },
-};
+/* explainfix.js, this round only */
+const EXPLAIN_FIX = {"s1:pick":{"en":{"steps":["List the three columns the task names, in the order it names them.","Say which table they live in.","Sort the rows by product name, A to Z."]},"ar":{"steps":["اكتب التلات اعمدة اللي المطلوب بيسميهم، بنفس الترتيب.","قول هما موجودين في انهي جدول.","رتب الصفوف على اسم المنتج من A لـ Z."]}},"s1:rename":{"en":{"steps":["Pick the three columns.","Each one needs a new header: the exact name the report asks for.","A header with a space or a bracket in it has to be wrapped, so SQL reads it as one name and not as separate words.","Sort by the product name."],"example":"The price column keeps its values; only its header changes, from unit_price to Price (EGP)."},"ar":{"steps":["اختار التلات اعمدة.","كل عمود محتاج header جديد: الاسم بالظبط اللي التقرير طالبه.","الاسم اللي فيه مسافة او قوس لازم يتلف، عشان SQL تقراه اسم واحد مش كلمات منفصلة.","رتب على اسم المنتج."],"example":"عمود السعر قيمه زي ما هي؛ اللي بيتغير الـ header بس، من unit_price لـ Price (EGP)."}},"s1:boxes":{"en":{"example":"Laptop Stand has 60 in stock: that fills exactly 5 boxes of 12, with nothing left. Mechanical Keyboard has 40: 3 full boxes take 36, so 4 are left over."},"ar":{"example":"Laptop Stand عنده 60: بيملا 5 كراتين من 12 بالظبط ومفيش حاجة فاضلة. و Mechanical Keyboard عنده 40: 3 كراتين كاملة بياخدوا 36، فبيفضل 4."}},"s1:fixvat":{"en":{"steps":["Run it and read the headers. Only two columns come back, and one carries the wrong name. Look at what sits between category and the column before it.","Check the maths on one row: 14 / 100 of the price is only the VAT itself, not the price a customer pays with VAT.","Look at the first row: is it the cheapest product or the most expensive? The task wants the most expensive first.","Two products at the same price: what decides which comes first? The task says A to Z by name."]},"ar":{"steps":["شغلها واقرا اسامي الاعمدة. هيرجع عمودين بس، وواحد منهم اسمه غلط. بص على اللي بين category والعمود اللي قبلها.","راجع الحساب على صف واحد: 14 / 100 من السعر دي الضريبة لوحدها، مش السعر اللي العميل بيدفعه بالضريبة.","بص على اول صف: ده ارخص منتج ولا اغلى منتج؟ المطلوب الاغلى الاول.","منتجين بنفس السعر: مين بيحدد انهي يجي الاول؟ المطلوب من A لـ Z على الاسم."]}}};
 STAGES.forEach((s) => s.questions.forEach((q) => {
   const f = EXPLAIN_FIX[s.id + ':' + q.id];
   if (!f) return;
   Object.assign(q.explain, f.en);
   if (q.ar && q.ar.explain) Object.assign(q.ar.explain, f.ar);
 }));
+
+/* league.js, this round only */
+const ROUND_MINUTES = {"s1":55};
+const HINT_FIX = {"s1:pick":["The columns you name after SELECT come back in the order you write them, separated by commas. Sorting is its own step at the end of the query.","الاعمدة اللي بتكتبها بعد SELECT بترجع بنفس الترتيب اللي كتبتها بيه، وبينهم comma. والترتيب خطوة لوحدها في اخر الـ query."],"s1:hiddensort":["ORDER BY can sort by any column of the table, even one you do not show. It can also take more than one column: the second one only breaks ties in the first.","الـ ORDER BY ينفع ترتب بيها على اي عمود في الجدول، حتى لو مش ظاهر. وتقدر تديها اكتر من عمود: التاني بيفك التعادل في الاول بس."],"s1:rename":["AS gives a column a new header. A header with a space or brackets inside has to be wrapped, so SQL reads it as one name.","الـ AS بتدي العمود header جديد. والاسم اللي فيه مسافة او اقواس لازم يتلف، عشان SQL تقراه اسم واحد."],"s1:stockvalue":["A calculation can be a column of its own, with its own name. ORDER BY can then sort by that new name.","الحساب ينفع يبقى عمود لوحده باسم بتاعه. والـ ORDER BY تقدر بعدها ترتب على الاسم الجديد ده."],"s1:sortmix":["ORDER BY takes several columns, each with its own direction. A direction word affects only the column right before it.","الـ ORDER BY بتاخد كذا عمود، وكل عمود ليه اتجاهه. وكلمة الاتجاه بتاثر بس على العمود اللي قبلها على طول."],"s1:distinctpairs":["DISTINCT removes repeated rows, and it always looks at the whole row: two rows repeat only if every column you show matches.","الـ DISTINCT بتشيل الصفوف المتكررة، ودايما بتبص على الصف كله: صفين بيبقوا متكررين بس لو كل الاعمدة اللي بتعرضها متطابقة."],"s1:top5":["TOP keeps the first rows of the result, and \"first\" is decided by the sort. Without a sort, the first rows are whatever SQL Server happens to read first.","الـ TOP بتاخد اول صفوف في النتيجة، و\"اول\" دي بيحددها الترتيب. من غير ترتيب، اول صفوف هي اي حاجة SQL Server قراها الاول."],"s1:ties":["TOP has an option that also keeps every row tied with the last row it kept: look at WITH TIES. It needs a sort to know what a tie is.","الـ TOP ليها option بتسيب كمان كل صف متعادل مع اخر صف خدته: بص على WITH TIES. ومحتاجة ترتيب عشان تعرف التعادل يعني ايه."],"s1:boxes":["In SQL Server two whole numbers divided give a whole number, which is exactly the count of full boxes. What is left over is the remainder of the division, and SQL Server has an operator for it.","في SQL Server قسمة رقمين صحاح بتطلع رقم صحيح، وده بالظبط عدد الكراتين الكاملة. واللي فاضل هو باقي القسمة، و SQL Server ليها operator ليه."],"s1:paging":["After the sort, SQL Server can skip a number of rows and then return a number of rows: look at OFFSET and FETCH. Page 2 means skipping one full page.","بعد الترتيب، SQL Server تقدر تعدي عدد صفوف وبعدين ترجع عدد صفوف: بص على OFFSET و FETCH. وصفحة 2 يعني تعدي صفحة كاملة."],"s1:fixvat":["Count the columns in the result: one is missing, and a missing comma can turn a column into another column's new name. Then check the VAT maths on one row, the sort direction, and what decides between equal prices.","عد الاعمدة في النتيجة: فيه عمود ناقص، والـ comma الناقصة ممكن تخلي عمود يبقى اسم جديد لعمود تاني. وبعدين راجع حساب الـ VAT على صف واحد، واتجاه الترتيب، ومين بيحدد بين الاسعار المتساوية."]};
+const PROMPT_FIX = {};
+STAGES.forEach((s) => {
+  if (ROUND_MINUTES[s.id]) s.minutes = ROUND_MINUTES[s.id];
+  if (s.id === 's9') {
+    s.title = { en: 'The final: the shop review', ar: 'النهائي: مراجعة المحل' };
+    s.blurb = { en: 'Eight questions for the management meeting, each one query, mixing everything from Rounds 1 to 8.', ar: 'تمن اسئلة لاجتماع الادارة، كل سؤال query واحدة، وفيهم كل حاجة من الجولة 1 لـ 8.' };
+  }
+  s.questions.forEach((q) => {
+    const h = HINT_FIX[s.id + ':' + q.id];
+    if (h) { q.hint = h[0]; if (q.ar) q.ar.hint = h[1]; }
+    const p = PROMPT_FIX[s.id + ':' + q.id];
+    if (p) { q.prompt = p[0]; if (q.ar) q.ar.prompt = p[1]; }
+  });
+});
 
 /* This page is week 1: only its own stage. */
 STAGES.splice(0, STAGES.length, ...STAGES.filter((s) => s.id === 's1'));
@@ -2785,11 +2650,15 @@ const RESULTS_URL = "https://script.google.com/macros/s/AKfycbygxtpdkgYqRvHmEuLV
 const T = {
   en: {
     language: 'Language', theme: 'Colour theme', light: 'Light mode', dark: 'Dark mode', submit: 'Submit',
-    eyebrow: 'Occulenz · SQL Server practice', heroTitle: '<span class="key">SQL</span> for Data Analysts',
-    factQueries: 'queries', factPoints: 'points', minutes: 'minutes', noLimit: 'no time limit', home: 'Home', leaveQuiz: 'Go to the home page? Your answers stay saved on this device, and the clock keeps running.',
-    resume: 'Resume', discard: 'Discard', ready: 'Ready when you are', chooseStage: 'Stage', yourName: 'Your name', namePh: 'e.g. Sara Ahmed',
+    eyebrow: 'Occulenz · SQL Server', heroTitle: 'The <span class="key">SQL</span> League',
+    factQueries: 'challenges', factPoints: 'points', minutes: 'minutes', noLimit: 'no time limit', home: 'Home', leaveQuiz: 'Go to the home page? Your answers stay saved on this device, and the clock keeps running.',
+    resume: 'Resume', discard: 'Discard', ready: 'Ready when you are', chooseStage: 'Round', yourName: 'Your name', namePh: 'e.g. Sara Ahmed',
     timeLimit: 'Time limit', min: 'min', noTimer: 'no timer', start: 'Start the quiz',
-    durNone: 'No countdown. Press Submit when you finish.', durTimed: 'Submitted automatically when the {v}-minute clock reaches 00:00. Suggested for this stage: {s}.',
+    durNone: 'No countdown. Press Submit when you finish.', durTimed: 'You have {v} minutes. The clock starts when you press Start and keeps running even if you close the page or start again, and it submits by itself at 00:00. Only your first submitted attempt counts for the ranking.',
+    startNet: "Couldn't reach the server to start your clock. Check your connection and try again.",
+    practiceBadge: 'practice', practiceNote: 'Practice: your first attempt for this round is already in, so this one does not count for the ranking.',
+    expiredNote: 'Your time for this round ran out (you started at {t}) before you submitted, so this round does not count for you. You can still practise it; it will not count.',
+    practiceDone: 'Practice attempt: not counted in the ranking.',
     engLoading: 'Loading the SQL engine…', engOk: 'SQL Server practice engine ready. It runs in your browser.', engErr: 'The SQL engine did not load. Check your connection and reload the page.',
     needName: 'Enter your name so your result can be matched to you.',
     yourCode: 'Your personal code', codePh: 'e.g. K7M2QP', codeHelp: 'The code your instructor gave you. Your result reaches them under your name.', needCode: 'Enter the personal code your instructor gave you.',
@@ -2800,9 +2669,9 @@ const T = {
     step1: '1 · Read', step1t: 'Open a card from the board. The task, the sample data and the expected result are on the left. Table and column names are ready to click or drag into your query.',
     step2: '2 · Run', step2t: "Run shows your query's result on the sample data, with SQL Server's own error messages when something is wrong. It does not grade anything, so run as often as you like.",
     step3: '3 · Test', step3t: "Run tests checks your query on the sample data and on 3 hidden data sets with the traps real data has: NULLs, ties, look-alike text and edge values. Stuck? Explain is free; a Hint halves that challenge's points; the Solution makes it 0.",
-    theTrack: 'The track', trackNote: 'A new stage opens every week. 70% or more means you are ready for the next one.',
-    stageN: 'Stage {n}', stageMeta: '{q} queries · {m} min', comingSoon: 'coming next',
-    stageChip: 'Stage {n} · {title}',
+    theTrack: 'The rounds', trackNote: 'A new round opens every week. Your first submitted attempt in each round is the one that counts.',
+    stageN: 'Round {n}', stageMeta: '{q} challenges · {m} min', comingSoon: 'coming next',
+    stageChip: 'Round {n} · {title}',
     solvedOf: '/ {n} solved', ptsOf: '/ {n} pts', timeLeft: 'Time left', timeSpent: 'Time spent',
     colNew: 'Not started', colWork: 'Working on it', colPass: 'Solved', emptyNew: 'Every challenge has been tested at least once.', emptyWork: 'Cards land here after Run tests if some tests still fail.', emptyPass: 'Cards land here when every test passes.',
     advanced: 'Advanced', draft: 'draft', pts: '{n} pts', testsOf: '{a}/{b} tests', challengeN: 'Challenge {n}: {title}',
@@ -2838,24 +2707,28 @@ const T = {
     min5: '5 minutes left.', min1: '1 minute left. Your queries are submitted automatically at 00:00.',
     used: '{t} used', atLimit: ' · submitted at the time limit', solvedL: 'solved', testsPassed: 'tests passed', toReview: 'to review', points: '/ {n} points',
     byChallenge: 'Challenge by challenge', byTopic: 'By topic', workNext: 'What to work on next · weakest topic first', workNextAll: 'What to work on next',
-    missed: 'Missed here: {list}.', practise: 'Practise', allPassed: 'Every challenge passed every test. Next step: {next}',
+    missed: 'Missed here: {list}.', practise: 'Practise', allPassed: 'Every challenge passed every test.',
     review: 'Review · open a challenge to see your query next to the reference solution', yourQuery: 'Your query', reference: 'Reference solution', wentWrong: 'What went wrong',
     noQuery: '(no query written)', ruleNot: 'rule not followed', solViewed: 'solution viewed', testsPts: '{p}/{t} tests · {e} / {m} pts',
-    summary: 'Result summary to send to your instructor', copy: 'Copy summary', again: 'Start a new attempt', copied: 'Copied.', pressCopy: 'Press Ctrl+C (Cmd+C on Mac) to copy.',
-    v90: 'Ready for real analyst work', v90t: 'You write correct queries and you handle the traps real data has.',
-    v70: 'Solid basics, a few gaps', v70t: 'The core is there. Close the gaps below before relying on these queries at work.',
-    v50: 'Getting there', v50t: 'You know the shapes of the queries. The hidden data shows where the details break.',
-    v0: 'Review the basics', v0t: 'Go back over the topics of this stage, then try again.',
+    summary: 'Result summary to send to your instructor', copy: 'Copy summary', again: "Practise again (doesn't count for the ranking)", copied: 'Copied.', pressCopy: 'Press Ctrl+C (Cmd+C on Mac) to copy.',
+    v90: 'Excellent round', v90t: 'The review below shows any challenge where points were lost, and how to think about it.',
+    v70: 'Strong round', v70t: 'The review below shows every challenge where points were lost, and how to think about it.',
+    v50: 'Good effort', v50t: 'The review below shows every challenge where points were lost, and how to think about it.',
+    v0: 'A tough round', v0t: 'The review below shows every challenge where points were lost, and how to think about it.',
     sumScore: 'Score: {s} / {m} ({p}%) · {v}', sumTime: 'Time used: {t}', sumTests: 'Tests passed: {p} / {t}', sumTopics: 'By topic: ', sumLine: '{n}. {title} ({topic}): {p}/{t} tests, {e}/{m} pts', sumViewed: 'Solutions viewed: {n}',
     sumReview: 'To review: ', sumAll: 'All challenges fully passed.', ofLimit: ' of {t}', noLimitNote: ' (no time limit)', autoNote: ' (auto-submitted at time limit)'
   },
   ar: {
     language: 'اللغة', theme: 'الوضع الفاتح والغامق', light: 'فاتح', dark: 'غامق', submit: 'سلم',
-    eyebrow: 'Occulenz · تدريب SQL Server', heroTitle: 'مسار <span class="key">SQL</span><br>للـ Data Analyst',
+    eyebrow: 'Occulenz · SQL Server', heroTitle: 'دوري الـ <span class="key">SQL</span>',
     factQueries: 'تحدي', factPoints: 'نقطة', minutes: 'دقيقة', noLimit: 'من غير وقت', home: 'الرئيسية', leaveQuiz: 'تروح للصفحة الرئيسية؟ اجاباتك متسجلة على الجهاز ده، والعداد هيفضل شغال.',
-    resume: 'كمل', discard: 'امسحه', ready: 'جاهز؟ يلا بينا', chooseStage: 'المرحلة', yourName: 'اسمك', namePh: 'مثلا سارة احمد',
+    resume: 'كمل', discard: 'امسحه', ready: 'جاهز؟ يلا بينا', chooseStage: 'الجولة', yourName: 'اسمك', namePh: 'مثلا سارة احمد',
     timeLimit: 'الوقت', min: 'دقيقة', noTimer: 'من غير وقت', start: 'ابدا الـ quiz',
-    durNone: 'مفيش عداد. دوس سلم لما تخلص.', durTimed: 'بيتسلم لوحده لما عداد الـ {v} دقيقة يوصل 00:00. المقترح للمرحلة دي: {s}.',
+    durNone: 'مفيش عداد. دوس سلم لما تخلص.', durTimed: 'معاك {v} دقيقة. العداد بيبدا لما تدوس ابدا، وبيفضل شغال حتى لو قفلت الصفحة او بدات من الاول، وبيسلم لوحده عند 00:00. اول محاولة تسلمها بس هي اللي بتتحسب في الترتيب.',
+    startNet: 'مقدرناش نوصل للسيرفر عشان نبدا العداد بتاعك. اتاكد من النت وجرب تاني.',
+    practiceBadge: 'تمرين', practiceNote: 'تمرين: اول محاولة ليك في الجولة دي اتسلمت خلاص، فدي مش هتتحسب في الترتيب.',
+    expiredNote: 'وقت الجولة دي خلص (بدات الساعة {t}) قبل ما تسلم، فالجولة دي مش هتتحسبلك. تقدر تتمرن عليها، بس مش هتتحسب.',
+    practiceDone: 'محاولة تمرين: مش محسوبة في الترتيب.',
     engLoading: 'بيحمل محرك الـ SQL…', engOk: 'محرك SQL Server جاهز، وبيشتغل جوه الـ browser بتاعك.', engErr: 'محرك الـ SQL ماتحملش. اتاكد من النت واعمل reload للصفحة.',
     needName: 'اكتب اسمك عشان النتيجة تتنسب ليك.',
     yourCode: 'الكود بتاعك', codePh: 'مثلا K7M2QP', codeHelp: 'الكود اللي المدرب اداهولك. نتيجتك بتوصله باسمك.', needCode: 'اكتب الكود اللي المدرب اداهولك.',
@@ -2866,9 +2739,9 @@ const T = {
     step1: '1 · اقرا', step1t: 'افتح كارت من البورد. المطلوب والـ sample data والنتيجة المتوقعة على جنب. واسامي الجداول والاعمدة جاهزة تدوس عليها او تسحبها جوه الـ query.',
     step2: '2 · شغل', step2t: 'شغل بيعرضلك نتيجة الـ query على الـ sample data، وبرسايل الـ error بتاعة SQL Server نفسها لو فيه غلطة. ده مش بيصحح حاجة، فشغل براحتك.',
     step3: '3 · اختبر', step3t: 'شغل الـ tests بيجرب الـ query بتاعتك على الـ sample data وعلى 3 hidden data فيها الفخاخ اللي في الـ data الحقيقية: NULLs وتعادل ونصوص شبه بعض وقيم على الحد. ولو وقفت: "اشرحلي" ببلاش، والتلميح بيخلي التحدي بنص درجته، والحل بيخليه بصفر.',
-    theTrack: 'المسار', trackNote: 'كل اسبوع بتنزل مرحلة جديدة. لو جبت 70% او اكتر تبقى جاهز للي بعدها.',
-    stageN: 'مرحلة {n}', stageMeta: '{q} تحدي · {m} دقيقة', comingSoon: 'جاية',
-    stageChip: 'مرحلة {n} · {title}',
+    theTrack: 'الجولات', trackNote: 'كل اسبوع بتفتح جولة جديدة. واول محاولة تسلمها في كل جولة هي اللي بتتحسب.',
+    stageN: 'الجولة {n}', stageMeta: '{q} تحدي · {m} دقيقة', comingSoon: 'جاية',
+    stageChip: 'الجولة {n} · {title}',
     solvedOf: 'من {n} اتحلوا', ptsOf: 'من {n} نقطة', timeLeft: 'الوقت الفاضل', timeSpent: 'الوقت اللي عدى',
     colNew: 'لسه متبداش', colWork: 'شغال عليها', colPass: 'اتحلت', emptyNew: 'كل التحديات اتجربت مرة على الاقل.', emptyWork: 'الكروت بتيجي هنا بعد شغل الـ tests لو لسه فيه tests مش بتعدي.', emptyPass: 'الكروت بتيجي هنا لما كل الـ tests تعدي.',
     advanced: 'متقدم', draft: 'مسودة', pts: '{n} نقطة', testsOf: '{a}/{b} tests', challengeN: 'تحدي {n}: {title}',
@@ -2904,14 +2777,14 @@ const T = {
     min5: 'فاضل 5 دقايق.', min1: 'فاضل دقيقة. الـ queries بتاعتك هتتسلم لوحدها عند 00:00.',
     used: 'اخدت {t}', atLimit: ' · اتسلم لما الوقت خلص', solvedL: 'اتحلوا', testsPassed: 'tests عدوا', toReview: 'محتاجين مراجعة', points: 'من {n} نقطة',
     byChallenge: 'تحدي تحدي', byTopic: 'حسب الموضوع', workNext: 'تعمل ايه بعد كده · من اضعف موضوع', workNextAll: 'تعمل ايه بعد كده',
-    missed: 'فاتك هنا: {list}.', practise: 'اتمرن على', allPassed: 'كل التحديات عدت كل الـ tests. الخطوة الجاية: {next}',
+    missed: 'فاتك هنا: {list}.', practise: 'اتمرن على', allPassed: 'كل التحديات عدت كل الـ tests.',
     review: 'مراجعة · افتح اي تحدي تشوف الـ query بتاعتك جنب الحل النموذجي', yourQuery: 'الـ query بتاعتك', reference: 'الحل النموذجي', wentWrong: 'ايه اللي غلط',
     noQuery: '(مفيش query)', ruleNot: 'مالتزمش بالقاعدة', solViewed: 'فتح الحل', testsPts: '{p}/{t} tests · {e} من {m} نقطة',
-    summary: 'ملخص النتيجة تبعته للمدرب', copy: 'انسخ الملخص', again: 'حاول تاني', copied: 'اتنسخ.', pressCopy: 'دوس Ctrl+C (او Cmd+C على الماك) عشان تنسخ.',
-    v90: 'جاهز لشغل الـ Data Analyst الحقيقي', v90t: 'بتكتب queries صح وبتعرف تتعامل مع الفخاخ اللي في الـ data الحقيقية.',
-    v70: 'اساس كويس وفيه شوية ثغرات', v70t: 'الاساس موجود. اقفل الثغرات اللي تحت قبل ما تعتمد على الـ queries دي في الشغل.',
-    v50: 'قربت', v50t: 'انت عارف شكل الـ queries. والـ hidden data بتوريك التفاصيل اللي بتقع فيها.',
-    v0: 'راجع الاساسيات', v0t: 'ارجع لمواضيع المرحلة دي وبعدين جرب تاني.',
+    summary: 'ملخص النتيجة تبعته للمدرب', copy: 'انسخ الملخص', again: 'اتمرن تاني (مش هتتحسب في الترتيب)', copied: 'اتنسخ.', pressCopy: 'دوس Ctrl+C (او Cmd+C على الماك) عشان تنسخ.',
+    v90: 'جولة ممتازة', v90t: 'المراجعة اللي تحت بتوريك اي تحدي ضاعت فيه نقط، وتفكر فيه ازاي.',
+    v70: 'جولة قوية', v70t: 'المراجعة اللي تحت بتوريك كل تحدي ضاعت فيه نقط، وتفكر فيه ازاي.',
+    v50: 'مجهود كويس', v50t: 'المراجعة اللي تحت بتوريك كل تحدي ضاعت فيه نقط، وتفكر فيه ازاي.',
+    v0: 'جولة صعبة', v0t: 'المراجعة اللي تحت بتوريك كل تحدي ضاعت فيه نقط، وتفكر فيه ازاي.',
     sumScore: 'الدرجة: {s} من {m} ({p}%) · {v}', sumTime: 'الوقت: {t}', sumTests: 'الـ tests اللي عدت: {p} من {t}', sumTopics: 'حسب الموضوع: ', sumLine: '{n}. {title} ({topic}): {p}/{t} tests، {e} من {m} نقطة', sumViewed: 'عدد الحلول اللي اتفتحت: {n}',
     sumReview: 'محتاج يراجع: ', sumAll: 'كل التحديات عدت بالكامل.', ofLimit: ' من {t}', noLimitNote: ' (من غير وقت)', autoNote: ' (اتسلم لوحده لما الوقت خلص)'
   }
@@ -2920,7 +2793,7 @@ const TRACK = [
   { en: 'Placement test', ar: 'تحديد المستوى' }, { en: 'Reading a table', ar: 'القراية من جدول' }, { en: 'Filtering & NULL', ar: 'الفلترة والـ NULL' },
   { en: 'Row-level functions', ar: 'functions على مستوى الصف' }, { en: 'Aggregation', ar: 'التجميع' }, { en: 'Joins', ar: 'الـ Joins' },
   { en: 'Subqueries & CTEs', ar: 'الـ subqueries والـ CTEs' }, { en: 'Window functions', ar: 'الـ window functions' }, { en: 'Business analytics', ar: 'تحليلات الـ business' },
-  { en: 'Capstone', ar: 'المشروع الختامي' }
+  { en: 'The final', ar: 'النهائي' }
 ];
 let LANG = 'en';
 const t = (k, v = {}) => String(T[LANG][k] != null ? T[LANG][k] : T.en[k]).replace(/\{(\w+)\}/g, (m, x) => (v[x] != null ? v[x] : ''));
@@ -2937,7 +2810,7 @@ const EXP = {}, DBS = [], FLIPS = [];
 const maxPts = () => QUESTIONS.reduce((a, q) => a + q.points, 0);
 const groupOf = (q) => STAGE.groups[q.id];
 const groupName = (g) => L(STAGE.groupNames[g]);
-const stageLabel = (s = STAGE) => (s.capstone ? L(s.title) : t('stageChip', { n: s.no, title: L(s.title) }));
+const stageLabel = (s = STAGE) => t('stageChip', { n: s.no, title: L(s.title) });
 function setStage(id) { STAGE = STAGES.find((s) => s.id === id) || STAGES[0]; QUESTIONS = STAGE.questions; EXPECTED = EXP[STAGE.id] || []; }
 async function loadEngine() {
   if (typeof initSqlJs === 'undefined') return false;
@@ -3023,7 +2896,7 @@ function resultPayload() {
   const title = (o) => (typeof o === 'string' ? o : o.en);
   return {
     code: S.code, week: typeof WEEK_NO !== 'undefined' ? WEEK_NO : null,
-    stage: (STAGE.capstone ? '' : 'Stage ' + STAGE.no + ' · ') + title(STAGE.title),
+    stage: 'Round ' + STAGE.no + ' · ' + title(STAGE.title), practice: !!S.practice,
     score: Math.round(total * 10) / 10, max: maxPts(),
     testsPassed: S.final.reduce((a, f) => a + f.passed, 0), testsTotal: S.final.reduce((a, f) => a + f.total, 0),
     hints: S.hintCost.filter(Boolean).length, solutions: S.solCost.filter(Boolean).length,
@@ -3122,7 +2995,7 @@ function storeSave() {
   if (S.screen !== 'board') return;
   try {
     localStorage.setItem(KEY(), JSON.stringify({
-      name: S.name, code: S.code, attemptId: S.attemptId, duration: S.duration, startAt: S.startAt, endAt: S.endAt, current: S.current,
+      name: S.name, code: S.code, attemptId: S.attemptId, duration: S.duration, startAt: S.startAt, endAt: S.endAt, current: S.current, practice: !!S.practice,
       codes: S.codes, runs: S.runs, hintSeen: S.hintSeen, solSeen: S.solSeen, hintCost: S.hintCost, solCost: S.solCost
     }));
   } catch (e) {}
@@ -3407,10 +3280,8 @@ function initStart() {
   pickDefaultTime(); renderStartTexts();
   checkEngine();
 }
-function selectedMinutes() {
-  const v = parseInt((document.querySelector('input[name="dur"]:checked') || {}).value, 10);
-  return isNaN(v) ? STAGE.minutes : v;
-}
+// The round decides the time; the student does not choose it.
+function selectedMinutes() { return STAGE.minutes; }
 function updateDur() {
   const v = selectedMinutes(), none = v === 0;
   $('#statTime').textContent = none ? '∞' : String(v);
@@ -3448,17 +3319,36 @@ async function startQuiz() {
   $('#startErr').textContent = '';
   setStage(selectedStageId());
   const dur = selectedMinutes() * 60;
+  let startAt = Date.now(), practice = false, note = '';
+  if (SHEET) {
+    starting = true; $('#startBtn').disabled = true;
+    const r = await startRound(code, dur / 60);
+    starting = false; paintEngine();
+    if (!r || !r.ok) { $('#startErr').textContent = r && r.error === 'unknown code' ? t('codeBad') : t('startNet'); return; }
+    if (typeof r.startedAt !== 'number') r.startedAt = r.serverNow = Date.now(); // a server without the clock: start here
+    // The server's clock, moved onto this device's clock so a wrong device time changes nothing.
+    const started = r.startedAt - (r.serverNow - Date.now());
+    if (r.practice) { practice = true; note = t('practiceNote'); }
+    else if (r.expired) { practice = true; note = t('expiredNote', { t: new Date(started).toLocaleTimeString(LANG === 'ar' ? 'ar-EG' : 'en-GB', { hour: '2-digit', minute: '2-digit' }) }); }
+    else startAt = started;
+  }
   Object.assign(S, freshState(), {
-    name, code, attemptId: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), duration: dur, startAt: Date.now(), endAt: dur ? Date.now() + dur * 1000 : 0, current: 0,
+    name, code, attemptId: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), duration: dur, startAt, endAt: dur ? startAt + dur * 1000 : 0, current: 0, practice,
     final: [], submitted: false, grading: false, auto: false, milestones: { 5: false, 1: false }
   });
   enterQuiz();
+  if (note) notify(note);
+}
+/* Asks the sheet when this student first started this round: { ok, startedAt, serverNow, practice, expired }. */
+async function startRound(code, minutes) {
+  try { return await fetchJson(SHEET + '?action=start&code=' + encodeURIComponent(code) + '&week=' + (typeof WEEK_NO !== 'undefined' ? WEEK_NO : '') + '&minutes=' + minutes, {}, 15000); }
+  catch (e) { return null; }
 }
 function resume(saved) {
   const base = freshState();
   Object.assign(S, base, {
     name: saved.name || '', code: saved.code || '', attemptId: saved.attemptId || Date.now().toString(36), duration: typeof saved.duration === 'number' ? saved.duration : STAGE.minutes * 60,
-    startAt: saved.startAt || Date.now(), endAt: saved.endAt || 0, current: Math.min(saved.current || 0, QUESTIONS.length - 1),
+    startAt: saved.startAt || Date.now(), endAt: saved.endAt || 0, current: Math.min(saved.current || 0, QUESTIONS.length - 1), practice: !!saved.practice,
     codes: saved.codes, runs: saved.runs || base.runs, hintSeen: saved.hintSeen || base.hintSeen, solSeen: saved.solSeen || base.solSeen,
     hintCost: saved.hintCost || base.hintCost, solCost: saved.solCost || base.solCost,
     final: [], submitted: false, grading: false, auto: false, milestones: { 5: false, 1: false }
@@ -3467,7 +3357,7 @@ function resume(saved) {
 }
 function enterQuiz() {
   show('board');
-  $('#who').textContent = S.name; $('#bandStage').textContent = stageLabel();
+  $('#who').textContent = S.name + (S.practice ? ' · ' + t('practiceBadge') : ''); $('#bandStage').textContent = stageLabel();
   renderBoard(); tick(); storeSave();
 }
 
@@ -3650,7 +3540,10 @@ function renderHelp() {
   if (h === 'solution') {
     // Free when already solved; otherwise ask first.
     if (!S.solSeen[i] && solved) { S.solSeen[i] = true; queueSave(); }
-    body.innerHTML = S.solSeen[i] ? (solved && !S.solCost[i] ? `<p class="okNote">${t('freeSolved')}</p>` : '') + solutionHtml(q) : gateHtml(i, 'solution');
+    // The traps ("watch out") often show another correct query, so they come with the Solution, not the Hint.
+    const watch = Q(q, 'explain').watch || [];
+    body.innerHTML = S.solSeen[i] ? (solved && !S.solCost[i] ? `<p class="okNote">${t('freeSolved')}</p>` : '') + solutionHtml(q)
+      + (watch.length ? `<div><span class="lab">${t('watch')}</span><ul>${watch.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : '') : gateHtml(i, 'solution');
     const b = $('#solGo'); if (b) b.addEventListener('click', () => openHelp(i, 'solution'));
   } else if (h === 'explain') {
     const ex = Q(q, 'explain');
@@ -3659,13 +3552,11 @@ function renderHelp() {
       <div><span class="lab">${t('whatToDo')}</span><ol>${ex.steps.map((x) => `<li>${x}</li>`).join('')}</ol></div>
       <div><span class="lab">${t('worked')}</span><p class="worked">${ex.example}</p></div>`;
   } else if (h === 'hint') {
-    // The traps ("watch out") live in the hint, so the free Explain never gives them away.
+    // The Hint is the idea only: no query, and the traps wait for the Solution.
     if (!S.hintSeen[i] && (solved || S.solCost[i])) { S.hintSeen[i] = true; queueSave(); }
-    const ex = Q(q, 'explain');
     const note = !S.hintCost[i] && S.solCost[i] ? t('freeAfterSol') : !S.hintCost[i] && solved ? t('freeSolved') : '';
     body.innerHTML = S.hintSeen[i]
-      ? `${note ? `<p class="okNote">${note}</p>` : ''}<div class="hintbox">${icon('i-spark')}<p>${esc(Q(q, 'hint'))}</p></div>
-         <div><span class="lab">${t('watch')}</span><ul>${ex.watch.map((x) => `<li>${x}</li>`).join('')}</ul></div>`
+      ? `${note ? `<p class="okNote">${note}</p>` : ''}<div class="hintbox">${icon('i-spark')}<p>${esc(Q(q, 'hint'))}</p></div>`
       : gateHtml(i, 'hint');
     const b = $('#hintGo'); if (b) b.addEventListener('click', () => openHelp(i, 'hint'));
   } else {
@@ -3899,7 +3790,7 @@ function renderResults() {
         <div class="sc-bar"><i class="stripes" style="width:${(total / M * 100).toFixed(1)}%"></i></div>
         <span class="bign" style="font-size:64px">${num(total)}<small style="font-size:16px">${t('points', { n: M })}</small></span>
         <span class="verdict"><i style="background:${v.color}"></i>${esc(v.label)}</span>
-        <p class="muted" style="font-size:13.5px;margin-top:-12px">${esc(v.text)}</p>
+        <p class="muted" style="font-size:13.5px;margin-top:-12px">${esc(v.text)}</p>${S.practice ? `<p class="muted" style="font-size:13.5px"><b>${esc(t('practiceDone'))}</b></p>` : ''}
       </div>
       <div class="card pad">
         <span class="lab">${t('byChallenge')}</span>
@@ -3913,7 +3804,7 @@ function renderResults() {
       ${weak.length ? `<div class="recs">${weak.map((x) => {
         const r = STAGE.recs[x.g], missed = x.ids.filter((i) => finalState(i) !== 'pass').map((i) => Q(QUESTIONS[i], 'title'));
         return `<div class="rec"><span class="pct">${x.pct}% · ${esc(groupName(x.g))}</span><p>${esc(L(r))}</p>${missed.length ? `<p>${esc(t('missed', { list: missed.join(LANG === 'ar' ? '، ' : ', ') }))}</p>` : ''}<span class="lab" style="margin-top:4px">${t('practise')}</span><ul>${r.links.map((l) => `<li><a href="${l.href}" target="_blank" rel="noopener" dir="ltr">${esc(l.name)}</a></li>`).join('')}</ul></div>`;
-      }).join('')}</div>` : `<div class="rec"><p>${esc(t('allPassed', { next: L(nx) }))}${nx.href ? ` <a href="${nx.href}" target="_blank" rel="noopener">↗</a>` : ''}</p></div>`}
+      }).join('')}</div>` : `<div class="rec"><p>${esc(t('allPassed'))}</p></div>`}
     </div>
     <div class="rq">
       <span class="lab">${t('reviewT')}</span>
@@ -3934,19 +3825,9 @@ function renderResults() {
         }).join('');
       })()}
     </div>
-    <div class="card copy">
-      <span class="lab">${t('summary')}</span>
-      <textarea id="summary" readonly aria-label="${t('summary')}"></textarea>
-      <div class="row"><button class="btn p" id="copyBtn" type="button">${icon('i-copy')}${t('copy')}</button><button class="btn" id="againBtn" type="button">${t('again')}</button><span class="muted" id="copyMsg" role="status" style="font-size:13px"></span></div>
-    </div>
+    <div class="row"><button class="btn" id="againBtn" type="button">${t('again')}</button></div>
   </div>`;
-  $('#summary').value = summaryText();
   paintSend();
-  $('#copyBtn').onclick = async () => {
-    const ta = $('#summary'), msg = $('#copyMsg');
-    try { await navigator.clipboard.writeText(ta.value); msg.textContent = t('copied'); }
-    catch (e) { ta.focus(); ta.select(); msg.textContent = t('pressCopy'); }
-  };
   $('#againBtn').onclick = () => { S.submitted = false; $('#name').value = S.name; show('start'); renderStartTexts(); };
 }
 
